@@ -1,11 +1,12 @@
 {
-  "name": "RoadTrip Planner Maps",
-  "short_name": "RoadTrip",
+  "name": "RoadTrip AI",
+  "short_name": "RoadTrip AI",
+  "description": "Plataforma modular y personal de planificación de viajes.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#111827",
-  "theme_color": "#111827",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
   "orientation": "portrait-primary",
   "icons": [
     {

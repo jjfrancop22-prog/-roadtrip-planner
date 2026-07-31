@@ -1,90 +1,76 @@
 
 import {load,save} from "./storage.js";
 import {seed} from "./seed.js";
-import {mapsUrl,haversine} from "./maps.js";
+import {mapsUrl} from "./maps.js";
 
-let state=load()||structuredClone(seed);
-const allStops=()=>state.trip.days.flatMap(d=>d.stops.map(s=>({...s,dayId:d.id,dayTitle:d.title,date:d.date})));
-const nextStop=()=>allStops().find(s=>!s.completed)||null;
-const progress=()=>{const s=allStops();return s.length?Math.round(s.filter(x=>x.completed).length/s.length*100):0};
-const map=L.map("map",{zoomControl:false}).setView([36.12,-115.17],12);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
-L.control.zoom({position:"topright"}).addTo(map);
-const markerLayer=L.layerGroup().addTo(map);
-let userMarker=null,routeLine=null,currentWeather=null,photoCache={};
+let state=load()||structuredClone(seed),route="dashboard",installPrompt=null;
+const $=s=>document.querySelector(s),app=$("#app"),title=$("#page-title");
+const trip=()=>state.trips.find(t=>t.id===state.selectedTripId)||state.trips[0];
+const allStops=t=>t.days.flatMap(d=>d.stops.map(s=>({...s,dayTitle:d.title})));
+const progress=t=>{const s=allStops(t);return s.length?Math.round(s.filter(x=>x.completed).length/s.length*100):0};
+const nextStop=t=>allStops(t).find(x=>!x.completed)||null;
+const esc=s=>(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const uid=p=>`${p}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-function icon(stop,isNext){
- const cls=`marker-pin ${stop.completed?"done":""} ${isNext?"next":""}`;
- return L.divIcon({html:`<div class="${cls}">${stop.icon}</div>`,className:"",iconSize:isNext?[46,46]:[38,38],iconAnchor:isNext?[23,23]:[19,19]});
+function persist(){save(state)}
+function setRoute(r){route=r;document.querySelectorAll("[data-route]").forEach(b=>b.classList.toggle("active",b.dataset.route===r));render()}
+function render(){document.documentElement.dataset.theme=state.settings.theme;if(route==="dashboard")dashboard();if(route==="trips")trips();if(route==="planner")planner();if(route==="center")center();if(route==="settings")settings();bind()}
+function dashboard(){
+ const t=trip(),p=progress(t),n=nextStop(t),remaining=Math.max(0,t.budget-t.spent);
+ title.textContent="Dashboard";
+ app.innerHTML=`<section class=hero><small>V2.0.0-A · FUNDACIÓN AI</small><h2>${esc(t.emoji)} ${esc(t.name)}</h2><p>${esc(t.route)}</p><div class=progress><i style="width:${p}%;background:white"></i></div><div class=hero-actions>${n?`<a class="button secondary" target=_blank href="${mapsUrl(n.address)}">🚗 Continuar viaje</a>`:""}<button class="button primary" data-open-trip>Ver proyecto</button></div></section>
+ <div class=section-head><h2>Resumen del proyecto</h2><span class=muted>${p}% completado</span></div>
+ <section class="grid dashboard-grid">
+  <article class=card><div class=label>Próxima parada</div><div class=metric>${n?esc(n.icon):"🎉"}</div><h3>${n?esc(n.name):"Viaje completado"}</h3><p class=muted>${n?esc(n.time+" · "+n.dayTitle):"Sin pendientes"}</p></article>
+  <article class=card><div class=label>Presupuesto disponible</div><div class=metric>$${remaining.toFixed(2)}</div><p class=muted>$${t.spent.toFixed(2)} gastados de $${t.budget.toFixed(2)}</p></article>
+  <article class=card><div class=label>Estado</div><div class="status ${t.status==="Idea"?"idea":""}">${esc(t.status)}</div><h3>${allStops(t).length} paradas</h3><p class=muted>${t.days.length} días · ${t.travelers} viajeros</p></article>
+ </section>
+ <div class=section-head><h2>Módulos V2</h2><span class=muted>Arquitectura lista</span></div>
+ <section class="grid dashboard-grid">
+  ${[["🧠","Planificador Inteligente","Base preparada para generar itinerarios."],["🗺️","Mapa Premium","Base preparada para rutas y capas."],["🚗","Asistente de Ruta","Continuar viaje y próxima parada."],["🧳","Centro del Viajero","Presupuesto, hoteles y documentos."],["📸","Diario de Viaje","Fotos, notas y línea de tiempo."]].map(x=>`<article class="card module"><div class=module-icon>${x[0]}</div><strong>${x[1]}</strong><span class=muted>${x[2]}</span></article>`).join("")}
+ </section>`;
 }
-function drawMap(){
- markerLayer.clearLayers();const stops=allStops(),next=nextStop(),pts=[];
- stops.forEach(s=>{const m=L.marker([s.lat,s.lng],{icon:icon(s,next?.id===s.id)}).addTo(markerLayer);m.on("click",()=>renderSheet(s));pts.push([s.lat,s.lng])});
- if(routeLine)map.removeLayer(routeLine);routeLine=L.polyline(pts,{color:"#0a84ff",weight:5,opacity:.72,dashArray:"8 9"}).addTo(map);
- if(next)map.flyTo([next.lat,next.lng],13,{duration:.8});
+function trips(){
+ title.textContent="Mis viajes";
+ app.innerHTML=`<section class=hero><small>PROYECTOS DE VIAJE</small><h2>Todos tus viajes en una plataforma</h2><p>Crea y conserva viajes futuros sin comenzar desde cero.</p><div class=hero-actions><button class="button secondary" data-new-trip>＋ Nuevo viaje</button></div></section>
+ <div class=section-head><h2>Viajes</h2><span class=muted>${state.trips.length} proyecto(s)</span></div>
+ <section class="grid trip-grid">${state.trips.map(t=>`<article class="card trip-card"><div class=trip-title><div class=trip-emoji>${esc(t.emoji)}</div><div><h3>${esc(t.name)}</h3><span class="status ${t.status==="Idea"?"idea":""}">${esc(t.status)}</span></div></div><p class=muted>${esc(t.route)}</p><div class=progress><i style="width:${progress(t)}%"></i></div><div class=actions><button class="button primary" data-select-trip="${t.id}">Abrir</button></div></article>`).join("")}</section>`;
 }
-const weatherCodes={0:"Despejado",1:"Mayormente despejado",2:"Parcialmente nublado",3:"Nublado",45:"Niebla",48:"Niebla helada",51:"Llovizna ligera",53:"Llovizna",55:"Llovizna intensa",61:"Lluvia ligera",63:"Lluvia",65:"Lluvia intensa",71:"Nieve ligera",73:"Nieve",75:"Nieve intensa",80:"Chubascos",81:"Chubascos",82:"Chubascos intensos",95:"Tormenta"};
-async function fetchWeather(stop){
- try{
-  const u=`https://api.open-meteo.com/v1/forecast?latitude=${stop.lat}&longitude=${stop.lng}&current=temperature_2m,apparent_temperature,weather_code&temperature_unit=fahrenheit&timezone=auto`;
-  const r=await fetch(u);if(!r.ok)throw new Error("weather");const d=await r.json();
-  currentWeather={temp:Math.round(d.current.temperature_2m),feels:Math.round(d.current.apparent_temperature),condition:weatherCodes[d.current.weather_code]||"Condición variable"};
- }catch{currentWeather=null}
+function planner(){
+ title.textContent="Planificador";
+ const t=trip();
+ app.innerHTML=`<section class=hero><small>PLANIFICADOR INTELIGENTE</small><h2>${esc(t.name)}</h2><p>En esta fundación ya existe el espacio para construir el motor automático de itinerarios.</p></section>
+ <div class=section-head><h2>Itinerario actual</h2><span class=muted>${t.days.length} días</span></div>
+ <section class=timeline>${t.days.length?t.days.map(d=>`<article class=day><h3>${esc(d.title)}</h3>${d.stops.map(s=>`<label class="stop ${s.completed?"done":""}"><input type=checkbox data-toggle="${d.id}|${s.id}" ${s.completed?"checked":""}><span><strong>${esc(s.icon)} ${esc(s.name)}</strong><br><small class=muted>${esc(s.time)} · ${esc(s.address)}</small></span></label>`).join("")}</article>`).join(""):`<div class=notice>Este viaje todavía no tiene itinerario.</div>`}</section>`;
 }
-async function fetchPhoto(stop){
- if(photoCache[stop.id])return photoCache[stop.id];
- try{
-  const q=encodeURIComponent(stop.photoQuery);const u=`https://en.wikipedia.org/w/api.php?action=query&origin=*&generator=search&gsrsearch=${q}&gsrlimit=1&prop=pageimages&pithumbsize=900&format=json`;
-  const r=await fetch(u);const d=await r.json();const page=Object.values(d.query?.pages||{})[0];photoCache[stop.id]=page?.thumbnail?.source||"";return photoCache[stop.id];
- }catch{return ""}
+function center(){
+ const t=trip();
+ title.textContent="Centro del viajero";
+ app.innerHTML=`<section class=hero><small>CENTRO DEL VIAJERO</small><h2>${esc(t.name)}</h2><p>Panel central para toda la información operativa del viaje.</p></section>
+ <div class=section-head><h2>Información principal</h2></div>
+ <section class="grid dashboard-grid">
+  <article class=card><div class=module-icon>💰</div><h3>Presupuesto</h3><p class=muted>$${t.spent.toFixed(2)} de $${t.budget.toFixed(2)}</p></article>
+  <article class=card><div class=module-icon>👥</div><h3>Viajeros</h3><p class=muted>${t.travelers} persona(s)</p></article>
+  <article class=card><div class=module-icon>🚘</div><h3>Transporte</h3><p class=muted>${esc(t.vehicle)}</p></article>
+  <article class=card><div class=module-icon>🏨</div><h3>Hoteles</h3><p class=muted>Preparado para la siguiente entrega.</p></article>
+  <article class=card><div class=module-icon>📄</div><h3>Documentos</h3><p class=muted>Preparado para la siguiente entrega.</p></article>
+  <article class=card><div class=module-icon>⛽</div><h3>Combustible</h3><p class=muted>Preparado para la siguiente entrega.</p></article>
+ </section>`;
 }
-function timeUntil(stop){
- const now=new Date(),[h,m]=(stop.time||"00:00").split(":").map(Number),target=new Date();
- target.setHours(h,m,0,0);let mins=Math.round((target-now)/60000);
- if(mins<0)return "Horario superado";if(mins<60)return `${mins} min`;return `${Math.floor(mins/60)} h ${mins%60} min`;
+function settings(){
+ title.textContent="Ajustes";
+ app.innerHTML=`<section class=grid><div class=setting><div><strong>Modo oscuro</strong><div class=muted>Preferencia persistente</div></div><input id=theme type=checkbox ${state.settings.theme==="dark"?"checked":""}></div><article class=card><h3>RoadTrip AI V2.0.0-A</h3><p class=muted>Arquitectura modular, múltiples viajes, dashboard renovado y navegación entre proyectos.</p></article><div class=notice>La V1.1.0 se mantiene como respaldo independiente.</div></section>`;
 }
-async function renderSheet(stop=nextStop()){
- if(!stop){document.querySelector("#sheet-content").innerHTML=`<div class=sheet-inner><div class=eyebrow>VIAJE COMPLETADO</div><h2 class=sheet-title>🎉 Todas las paradas listas</h2></div>`;return}
- const status=document.querySelector("#status-pill");status.textContent="Actualizando clima y fotografía…";
- await Promise.all([fetchWeather(stop),fetchPhoto(stop)]);
- const miles=haversine(state.userLocation,{lat:stop.lat,lng:stop.lng}),pct=progress(),photo=photoCache[stop.id];
- document.querySelector("#sheet-content").innerHTML=`<div class=sheet-inner>
-  <div class=eyebrow>${stop.id===nextStop()?.id?"PRÓXIMA PARADA":"PARADA DEL VIAJE"}</div>
-  <h2 class=sheet-title>${stop.icon} ${stop.name}</h2>
-  <div class=sheet-meta>⏰ ${stop.time} · ${stop.dayTitle}</div>
-  <div class=metric-row>
-   <div class=metric><strong>${miles==null?"—":miles.toFixed(1)+" mi"}</strong><span>Distancia recta</span></div>
-   <div class=metric><strong>${timeUntil(stop)}</strong><span>Hasta horario</span></div>
-   <div class=metric><strong>${currentWeather?currentWeather.temp+"°F":"—"}</strong><span>${currentWeather?currentWeather.condition:"Clima"}</span></div>
-  </div>
-  <div class=progress><i style="width:${pct}%"></i></div>
-  ${photo?`<div class=photo><img src="${photo}" alt="Fotografía de ${stop.name}"><div class=photo-label>📸 Referencia visual del destino</div></div>`:""}
-  <div class=info-block><strong>📸 Consejo para la fotografía</strong>${stop.tip}</div>
-  <div class=info-block><strong>🅿️ Estacionamiento</strong>${stop.parking}</div>
-  ${currentWeather?`<div class=info-block><strong>🌤 Clima actual</strong>${currentWeather.temp}°F, sensación ${currentWeather.feels}°F · ${currentWeather.condition}</div>`:""}
-  <div class=sheet-actions><button class="button secondary" data-complete="${stop.dayId}|${stop.id}">${stop.completed?"↩ Reabrir":"✓ Completar"}</button><a class="button primary" target=_blank href="${mapsUrl(stop.address)}">🚗 Navegar</a></div>
- </div>`;
- status.textContent=state.userLocation?`Ubicación activa · ${pct}% completado`:`Activa “Estoy aquí” para distancia · ${pct}% completado`;
- bindSheet();
+function bind(){
+ document.querySelectorAll("[data-open-trip]").forEach(b=>b.onclick=()=>setRoute("planner"));
+ document.querySelectorAll("[data-new-trip]").forEach(b=>b.onclick=()=>$("#trip-dialog").showModal());
+ document.querySelectorAll("[data-select-trip]").forEach(b=>b.onclick=()=>{state.selectedTripId=b.dataset.selectTrip;persist();setRoute("dashboard")});
+ document.querySelectorAll("[data-toggle]").forEach(b=>b.onchange=()=>{const[d,s]=b.dataset.toggle.split("|"),day=trip().days.find(x=>x.id===d),stop=day.stops.find(x=>x.id===s);stop.completed=b.checked;persist();render()});
+ const th=$("#theme");if(th)th.onchange=()=>{state.settings.theme=th.checked?"dark":"light";persist();render()};
 }
-function bindSheet(){document.querySelectorAll("[data-complete]").forEach(b=>b.onclick=()=>{const[d,s]=b.dataset.complete.split("|"),day=state.trip.days.find(x=>x.id===d),stop=day.stops.find(x=>x.id===s);stop.completed=!stop.completed;save(state);drawMap();renderSheet(nextStop()||stop);renderTimeline()})}
-function renderTimeline(){
- document.querySelector("#timeline-content").innerHTML=state.trip.days.map(day=>`<section class=day><h3>${day.title}</h3>${day.stops.map(s=>`<div class="timeline-item ${s.completed?"done":""}"><input type=checkbox data-timeline="${day.id}|${s.id}" ${s.completed?"checked":""}><div><strong>${s.icon} ${s.name}</strong><small>${s.time} · ${s.address}</small></div><a class=mini-nav target=_blank href="${mapsUrl(s.address)}">Ir</a></div>`).join("")}</section>`).join("");
- document.querySelectorAll("[data-timeline]").forEach(b=>b.onchange=()=>{const[d,s]=b.dataset.timeline.split("|"),stop=state.trip.days.find(x=>x.id===d).stops.find(x=>x.id===s);stop.completed=b.checked;save(state);drawMap();renderTimeline();renderSheet(nextStop()||stop)})
-}
-document.querySelector("#location-button").onclick=()=>{
- const pill=document.querySelector("#status-pill");if(!navigator.geolocation){pill.textContent="Ubicación no disponible";return}
- pill.textContent="Buscando tu ubicación…";
- navigator.geolocation.getCurrentPosition(pos=>{
-  state.userLocation={lat:pos.coords.latitude,lng:pos.coords.longitude};save(state);
-  if(userMarker)map.removeLayer(userMarker);
-  userMarker=L.circleMarker([state.userLocation.lat,state.userLocation.lng],{radius:9,color:"white",weight:4,fillColor:"#0a84ff",fillOpacity:1}).addTo(map);
-  map.flyTo([state.userLocation.lat,state.userLocation.lng],14);renderSheet(nextStop());pill.textContent="Ubicación encontrada";
- },err=>{pill.textContent=err.code===1?"Permiso de ubicación rechazado":"No se pudo obtener la ubicación"},{enableHighAccuracy:true,timeout:12000,maximumAge:30000})
-};
-document.querySelector("#timeline-button").onclick=()=>{renderTimeline();document.querySelector("#timeline-dialog").showModal()};
-document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>document.querySelector("#"+b.dataset.close).close());
-document.querySelector("#continue-button").onclick=()=>{const n=nextStop();if(n)window.open(mapsUrl(n.address),"_blank")};
-document.querySelector("#trip-name").textContent=state.trip.name;
-drawMap();renderSheet();renderTimeline();
+document.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>setRoute(b.dataset.route));
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$("#"+b.dataset.close).close());
+$("#trip-form").onsubmit=e=>{e.preventDefault();const t={id:uid("trip"),name:$("#trip-name").value.trim(),route:$("#trip-route").value.trim(),startDate:$("#trip-start").value,endDate:$("#trip-end").value,travelers:Number($("#trip-travelers").value)||1,emoji:$("#trip-emoji").value||"🚗",vehicle:$("#trip-vehicle").value.trim()||"Por definir",budget:Number($("#trip-budget").value)||0,spent:0,status:"Idea",days:[]};state.trips.push(t);state.selectedTripId=t.id;persist();$("#trip-dialog").close();e.target.reset();setRoute("dashboard")};
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;$("#install-button").classList.remove("hidden")});$("#install-button").onclick=async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;$("#install-button").classList.add("hidden")};
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js"));
+persist();render();

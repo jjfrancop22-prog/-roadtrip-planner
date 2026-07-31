@@ -1,1 +1,1 @@
-const KEY="roadtrip_planner_v1_1_0";export const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))}catch{return null}};export const save=s=>localStorage.setItem(KEY,JSON.stringify(s));
+const KEY="roadtrip_ai_v2_0_0_a";export const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))}catch{return null}};export const save=s=>localStorage.setItem(KEY,JSON.stringify(s));
