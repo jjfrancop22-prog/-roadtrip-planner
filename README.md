@@ -1,28 +1,25 @@
-# RoadTrip AI V2.0.0-A — Fundación AI
+# RoadTrip AI V2.1.0-A — Apple Maps UI Foundation
 
-## Incluye
-- Arquitectura modular V2.
-- Dashboard renovado.
-- Gestión de múltiples viajes.
-- Creación de nuevos proyectos de viaje.
-- Selección de viaje activo.
-- Resumen de progreso.
-- Próxima parada.
-- Presupuesto y centro del viajero.
-- Itinerario por días.
+## Alcance
+Esta versión cambia la experiencia visual y mantiene la lógica del viaje.
+
+Incluye:
+- Mapa ocupando aproximadamente 80–90 % de la pantalla.
+- Bottom Sheet expandible y contraíble.
+- Diseño visual inspirado en Apple Maps.
+- Botón flotante Continuar viaje.
+- Fotografías grandes de los destinos.
+- Marcador destacado de la próxima parada.
+- Animaciones suaves.
+- Diseño responsive para iPhone, iPad y escritorio.
+- Línea de tiempo en ventana elegante.
 - Checklist persistente.
-- PWA y almacenamiento local.
-- Modo oscuro y claro.
+- Clima automático.
+- Botón Estoy aquí.
+- Google Maps para navegación.
 
-## Módulos preparados
-1. Planificador Inteligente.
-2. Mapa Premium.
-3. Asistente de Ruta.
-4. Centro del Viajero.
-5. Diario de Viaje.
-
-## Actualización en GitHub y Netlify
-Reemplaza el contenido actual del repositorio por el contenido interno de esta carpeta. Netlify publicará automáticamente la misma URL.
+## Actualización
+Reemplaza el contenido del repositorio por los archivos internos de esta carpeta y realiza Commit. Netlify actualizará la misma URL.
 
 ## Importante
-Esta versión usa una nueva clave de almacenamiento para no mezclar datos con la V1.1.0.
+Esta versión usa una nueva clave localStorage para no mezclar datos con V2.0.0-A.

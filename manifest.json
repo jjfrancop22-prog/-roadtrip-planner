@@ -1,12 +1,12 @@
 {
-  "name": "RoadTrip AI",
+  "name": "RoadTrip AI Apple Maps",
   "short_name": "RoadTrip AI",
-  "description": "Plataforma modular y personal de planificación de viajes.",
+  "description": "Experiencia visual inspirada en Apple Maps para viajes y rutas.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#0f172a",
+  "background_color": "#eef2f7",
+  "theme_color": "#eef2f7",
   "orientation": "portrait-primary",
   "icons": [
     {

@@ -3,54 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#eef2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="RoadTrip AI">
-<meta name="description" content="Plataforma personal y modular de planificación de viajes.">
+<meta name="description" content="RoadTrip AI con experiencia visual inspirada en Apple Maps.">
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="./css/app.css">
 <title>RoadTrip AI</title>
 </head>
 <body>
-<header class="topbar">
-  <div>
-    <small>ROADTRIP AI</small>
-    <h1 id="page-title">Dashboard</h1>
+<div id="map" aria-label="Mapa del viaje"></div>
+
+<header class="floating-topbar">
+  <div class="brand-block">
+    <span class="eyebrow">ROADTRIP AI</span>
+    <strong id="trip-title">USA 2026</strong>
   </div>
-  <button id="install-button" class="icon-button hidden">⬇️</button>
+  <div class="top-actions">
+    <button id="location-button" class="round-button" type="button" aria-label="Estoy aquí">◎</button>
+    <button id="timeline-button" class="round-button" type="button" aria-label="Abrir cronología">☰</button>
+  </div>
 </header>
 
-<main id="app"></main>
+<div id="progress-pill" class="progress-pill">Preparando viaje…</div>
 
-<nav class="bottom-nav">
-  <button data-route="dashboard" class="active"><span>✨</span><small>Inicio</small></button>
-  <button data-route="trips"><span>🌎</span><small>Viajes</small></button>
-  <button data-route="planner"><span>🧠</span><small>Planificador</small></button>
-  <button data-route="center"><span>🧳</span><small>Centro</small></button>
-  <button data-route="settings"><span>⚙️</span><small>Ajustes</small></button>
-</nav>
+<section id="bottom-sheet" class="bottom-sheet compact" aria-label="Información de la próxima parada">
+  <button id="sheet-handle" class="sheet-handle" type="button" aria-label="Expandir o contraer información">
+    <span></span>
+  </button>
+  <div id="sheet-content"></div>
+</section>
 
-<dialog id="trip-dialog">
-  <form id="trip-form" method="dialog">
-    <div class="dialog-head"><h2>Nuevo viaje</h2><button type="button" data-close="trip-dialog">✕</button></div>
-    <label>Nombre<input id="trip-name" required placeholder="Ej. Canadá 2027"></label>
-    <label>Ruta<input id="trip-route" placeholder="Toronto → Ottawa → Montreal"></label>
-    <div class="cols">
-      <label>Fecha inicio<input id="trip-start" type="date"></label>
-      <label>Fecha fin<input id="trip-end" type="date"></label>
-    </div>
-    <div class="cols">
-      <label>Viajeros<input id="trip-travelers" type="number" min="1" value="1"></label>
-      <label>Emoji<input id="trip-emoji" value="🚗"></label>
-    </div>
-    <label>Vehículo o transporte<input id="trip-vehicle" placeholder="Carro, tren, avión..."></label>
-    <label>Presupuesto<input id="trip-budget" type="number" min="0" step="0.01" value="0"></label>
-    <div class="dialog-actions"><button type="button" data-close="trip-dialog">Cancelar</button><button class="primary">Guardar</button></div>
-  </form>
+<button id="continue-button" class="continue-button" type="button">🚗 Continuar viaje</button>
+
+<dialog id="timeline-dialog">
+  <div class="dialog-card">
+    <header class="dialog-header">
+      <div>
+        <span class="eyebrow">LÍNEA DE TIEMPO</span>
+        <h2 id="timeline-title">USA 2026</h2>
+      </div>
+      <button class="round-button" data-close="timeline-dialog" type="button">✕</button>
+    </header>
+    <div id="timeline-content"></div>
+  </div>
 </dialog>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module" src="./js/app.js"></script>
 </body>
 </html>
