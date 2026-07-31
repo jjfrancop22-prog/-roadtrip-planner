@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0-B",
+  "status": "dashboard-intelligent",
+  "features": {
+    "currentTrip": true,
+    "progress": true,
+    "nextStop": true,
+    "googleMaps": true,
+    "manualWeather": true,
+    "budget": true,
+    "tripStatus": true,
+    "persistentChecklist": true
+  }
+}
