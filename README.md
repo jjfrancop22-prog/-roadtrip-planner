@@ -1,34 +1,24 @@
-# RoadTrip Planner V1.0.0-B — Dashboard Inteligente
+# RoadTrip Planner V1.1.0 — Experiencia tipo Mapas
 
-## Incluye
-
-- Viaje actual visible al abrir.
-- Progreso calculado desde el checklist.
-- Próxima parada automática.
-- Botón “Navegar ahora” con Google Maps.
-- Clima editable manualmente.
-- Presupuesto total, gasto y saldo restante.
-- Estado general del viaje.
-- Itinerario USA 2026.
+## Funciones
+- Mapa Leaflet con OpenStreetMap.
+- Ruta y marcadores de todas las paradas.
+- Próxima parada resaltada.
+- Botón flotante Continuar viaje.
+- Tarjeta inferior tipo Apple Maps.
+- Línea de tiempo completa.
+- Fotografías automáticas obtenidas desde Wikipedia cuando están disponibles.
+- Clima actual mediante Open-Meteo.
+- Botón Estoy aquí con Geolocation.
+- Distancia en línea recta desde la ubicación actual.
+- Indicador de tiempo hasta el horario planificado.
+- Navegación directa con Google Maps.
 - Checklist persistente.
-- PWA, Service Worker y modo offline.
-- Modo oscuro y claro.
 
-## Actualizar en Netlify Drop
+## Actualización
+Reemplaza el contenido del repositorio con los archivos de esta carpeta. Netlify desplegará la misma URL.
 
-1. Descomprime este ZIP.
-2. En Netlify, crea un nuevo despliegue arrastrando la carpeta completa.
-3. Abre la URL publicada.
-4. Si el navegador muestra la versión anterior, actualiza dos veces o elimina los datos del sitio, porque la PWA usa caché.
-
-## Importante
-
-Esta versión usa una nueva clave de almacenamiento para no mezclar sus datos con la V1.0.0-A.
-
-## Próxima versión sugerida
-
-V1.0.0-C:
-- Crear, editar y eliminar viajes.
-- Crear días y paradas.
-- Reordenar itinerario.
-- Seleccionar un viaje activo.
+## Notas
+- La ubicación requiere HTTPS y permiso del usuario.
+- El clima, las fotografías y el mapa base requieren conexión.
+- La distancia mostrada es en línea recta; Google Maps calcula la ruta real al pulsar Navegar.

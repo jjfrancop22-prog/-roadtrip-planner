@@ -1,12 +1,11 @@
 {
-  "name": "RoadTrip Planner",
+  "name": "RoadTrip Planner Maps",
   "short_name": "RoadTrip",
-  "description": "Dashboard inteligente para viajes, rutas y progreso.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#0f172a",
+  "background_color": "#111827",
+  "theme_color": "#111827",
   "orientation": "portrait-primary",
   "icons": [
     {
