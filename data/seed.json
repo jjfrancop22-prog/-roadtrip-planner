@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0-A",
+  "version": "2.2.1",
   "selectedTripId": "usa-2026",
   "settings": {
     "theme": "dark"
@@ -33,7 +33,12 @@
               "lat": 36.082,
               "lng": -115.1728,
               "photoQuery": "Welcome to Fabulous Las Vegas Sign",
-              "tip": "Fotografía frontal al letrero, ideal antes del atardecer."
+              "tip": "Fotografía frontal al letrero, ideal antes del atardecer.",
+              "status": "pending",
+              "type": "attraction",
+              "source": "recommended",
+              "priority": "preferred",
+              "durationMinutes": 30
             },
             {
               "id": "lv2",
@@ -45,7 +50,12 @@
               "lat": 36.1247,
               "lng": -115.1729,
               "photoQuery": "Treasure Island Las Vegas",
-              "tip": "Parking estratégico antes de caminar hacia Bellagio."
+              "tip": "Parking estratégico antes de caminar hacia Bellagio.",
+              "status": "pending",
+              "type": "attraction",
+              "source": "recommended",
+              "priority": "preferred",
+              "durationMinutes": 30
             },
             {
               "id": "lv3",
@@ -57,7 +67,12 @@
               "lat": 36.1126,
               "lng": -115.1767,
               "photoQuery": "Bellagio fountains Las Vegas",
-              "tip": "Mejor foto frente al lago o desde el puente peatonal."
+              "tip": "Mejor foto frente al lago o desde el puente peatonal.",
+              "status": "pending",
+              "type": "attraction",
+              "source": "recommended",
+              "priority": "preferred",
+              "durationMinutes": 30
             },
             {
               "id": "lv4",
@@ -69,7 +84,12 @@
               "lat": 36.1205,
               "lng": -115.1614,
               "photoQuery": "Sphere Las Vegas",
-              "tip": "Busca una zona autorizada para fotografiar la esfera completa."
+              "tip": "Busca una zona autorizada para fotografiar la esfera completa.",
+              "status": "pending",
+              "type": "attraction",
+              "source": "recommended",
+              "priority": "preferred",
+              "durationMinutes": 30
             },
             {
               "id": "lv5",
@@ -81,7 +101,12 @@
               "lat": 36.1318,
               "lng": -115.209,
               "photoQuery": "AREA15 Las Vegas",
-              "tip": "Las esculturas exteriores lucen mejor de noche."
+              "tip": "Las esculturas exteriores lucen mejor de noche.",
+              "status": "pending",
+              "type": "attraction",
+              "source": "recommended",
+              "priority": "preferred",
+              "durationMinutes": 30
             },
             {
               "id": "lv6",
@@ -93,9 +118,17 @@
               "lat": 36.1708,
               "lng": -115.1441,
               "photoQuery": "Fremont Street Experience",
-              "tip": "Usa gran angular bajo el techo Viva Vision."
+              "tip": "Usa gran angular bajo el techo Viva Vision.",
+              "status": "pending",
+              "type": "attraction",
+              "source": "recommended",
+              "priority": "preferred",
+              "durationMinutes": 30
             }
-          ]
+          ],
+          "startCity": "Las Vegas",
+          "endCity": "Las Vegas",
+          "notes": ""
         },
         {
           "id": "sac-day",
@@ -112,7 +145,12 @@
               "lat": 36.1699,
               "lng": -115.1398,
               "photoQuery": "Las Vegas skyline",
-              "tip": "Confirma gasolina y documentos antes de salir."
+              "tip": "Confirma gasolina y documentos antes de salir.",
+              "status": "pending",
+              "type": "attraction",
+              "source": "recommended",
+              "priority": "preferred",
+              "durationMinutes": 30
             },
             {
               "id": "s2",
@@ -124,9 +162,17 @@
               "lat": 38.5816,
               "lng": -121.4944,
               "photoQuery": "Sacramento California skyline",
-              "tip": "Agrega luego hotel y primera actividad confirmada."
+              "tip": "Agrega luego hotel y primera actividad confirmada.",
+              "status": "pending",
+              "type": "attraction",
+              "source": "recommended",
+              "priority": "preferred",
+              "durationMinutes": 30
             }
-          ]
+          ],
+          "startCity": "Las Vegas",
+          "endCity": "Sacramento",
+          "notes": ""
         },
         {
           "id": "la-day",
@@ -143,7 +189,12 @@
               "lat": 38.5816,
               "lng": -121.4944,
               "photoQuery": "Sacramento California",
-              "tip": "Verifica tráfico y combustible."
+              "tip": "Verifica tráfico y combustible.",
+              "status": "pending",
+              "type": "attraction",
+              "source": "recommended",
+              "priority": "preferred",
+              "durationMinutes": 30
             },
             {
               "id": "la2",
@@ -155,9 +206,17 @@
               "lat": 34.0522,
               "lng": -118.2437,
               "photoQuery": "Los Angeles skyline",
-              "tip": "Agrega luego hotel, estacionamiento y plan nocturno."
+              "tip": "Agrega luego hotel, estacionamiento y plan nocturno.",
+              "status": "pending",
+              "type": "attraction",
+              "source": "recommended",
+              "priority": "preferred",
+              "durationMinutes": 30
             }
-          ]
+          ],
+          "startCity": "Sacramento",
+          "endCity": "Los Ángeles",
+          "notes": ""
         }
       ]
     },
@@ -175,5 +234,17 @@
       "spent": 0,
       "days": []
     }
-  ]
+  ],
+  "navigation": {
+    "arrivalRadiusMeters": 180,
+    "autoArrival": true,
+    "trackingEnabled": false
+  },
+  "parkingEngine": {
+    "enabled": true,
+    "favorites": [],
+    "selectionByStop": {},
+    "lastRecalculation": null,
+    "sortingMode": "free-first"
+  }
 }

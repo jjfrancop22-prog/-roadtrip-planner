@@ -1,13 +1,12 @@
 {
-  "name": "RoadTrip AI Apple Maps",
+  "name": "RoadTrip AI Day & Route Manager",
   "short_name": "RoadTrip AI",
-  "description": "Experiencia visual inspirada en Apple Maps para viajes y rutas.",
+  "description": "Gestión de días, rutas, paradas, horarios y estacionamientos inteligentes.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#eef2f7",
   "theme_color": "#eef2f7",
-  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "./assets/icons/icon-192.png",

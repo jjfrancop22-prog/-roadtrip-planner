@@ -1,25 +1,32 @@
-# RoadTrip AI V2.1.0-A — Apple Maps UI Foundation
+# RoadTrip AI V2.2.1 — Gestor de días y rutas
 
-## Alcance
-Esta versión cambia la experiencia visual y mantiene la lógica del viaje.
+## Funciones nuevas
+- Crear días.
+- Editar fecha, nombre, ciudad de inicio y ciudad de cierre.
+- Agregar notas generales.
+- Eliminar días vacíos.
+- Agregar paradas en cualquier día.
+- Mover una parada a otro día desde Editar.
+- Duplicar paradas.
+- Cambiar la hora.
+- Mover arriba o abajo.
+- Resumen de tiempo conduciendo y tiempo de visitas.
+- Totales generales del viaje.
 
-Incluye:
-- Mapa ocupando aproximadamente 80–90 % de la pantalla.
-- Bottom Sheet expandible y contraíble.
-- Diseño visual inspirado en Apple Maps.
-- Botón flotante Continuar viaje.
-- Fotografías grandes de los destinos.
-- Marcador destacado de la próxima parada.
-- Animaciones suaves.
-- Diseño responsive para iPhone, iPad y escritorio.
-- Línea de tiempo en ventana elegante.
-- Checklist persistente.
-- Clima automático.
-- Botón Estoy aquí.
-- Google Maps para navegación.
+## Funciones conservadas
+- Apple Maps UI.
+- GPS, ETA y estados.
+- Gestor de paradas.
+- Parking AI: gratis primero y pagados por menor costo.
+- Favoritos, alternativas y navegación.
+- LocalStorage.
 
-## Actualización
-Reemplaza el contenido del repositorio por los archivos internos de esta carpeta y realiza Commit. Netlify actualizará la misma URL.
+## Cómo probar
+1. Abre la línea de tiempo.
+2. Pulsa `Crear nuevo día`.
+3. Edita un día con `Día`.
+4. Usa el lápiz de una parada para cambiarla a otro día.
+5. Usa `⧉` para duplicar.
+6. Un día solo puede eliminarse cuando está vacío.
 
-## Importante
-Esta versión usa una nueva clave localStorage para no mezclar datos con V2.0.0-A.
+Carpeta completa e independiente.

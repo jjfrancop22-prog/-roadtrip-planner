@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="RoadTrip AI">
-<meta name="description" content="RoadTrip AI con experiencia visual inspirada en Apple Maps.">
+<meta name="description" content="RoadTrip AI con navegación inteligente y seguimiento GPS.">
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -15,41 +15,158 @@
 <title>RoadTrip AI</title>
 </head>
 <body>
-<div id="map" aria-label="Mapa del viaje"></div>
-
+<div id="map"></div>
 <header class="floating-topbar">
-  <div class="brand-block">
-    <span class="eyebrow">ROADTRIP AI</span>
-    <strong id="trip-title">USA 2026</strong>
-  </div>
+  <div class="brand-block"><span class="eyebrow">ROADTRIP AI</span><strong id="trip-title">USA 2026</strong></div>
   <div class="top-actions">
-    <button id="location-button" class="round-button" type="button" aria-label="Estoy aquí">◎</button>
-    <button id="timeline-button" class="round-button" type="button" aria-label="Abrir cronología">☰</button>
+    <button id="location-button" class="round-button" type="button">◎</button>
+    <button id="add-stop-button" class="round-button" type="button" aria-label="Agregar parada">＋</button>
+    <button id="timeline-button" class="round-button" type="button">☰</button>
   </div>
 </header>
-
-<div id="progress-pill" class="progress-pill">Preparando viaje…</div>
-
-<section id="bottom-sheet" class="bottom-sheet compact" aria-label="Información de la próxima parada">
-  <button id="sheet-handle" class="sheet-handle" type="button" aria-label="Expandir o contraer información">
-    <span></span>
-  </button>
+<div id="progress-pill" class="progress-pill">Preparando navegación…</div>
+<section id="bottom-sheet" class="bottom-sheet compact">
+  <button id="sheet-handle" class="sheet-handle" type="button"><span></span></button>
   <div id="sheet-content"></div>
 </section>
-
-<button id="continue-button" class="continue-button" type="button">🚗 Continuar viaje</button>
-
+<button id="continue-button" class="continue-button" type="button">🧭 Llévame a la siguiente</button>
+<section id="driving-mode" class="driving-mode hidden">
+  <header><span class="eyebrow">SMART NAVIGATION</span><button id="close-driving" class="round-button" type="button">✕</button></header>
+  <div id="driving-content"></div>
+</section>
 <dialog id="timeline-dialog">
   <div class="dialog-card">
     <header class="dialog-header">
-      <div>
-        <span class="eyebrow">LÍNEA DE TIEMPO</span>
-        <h2 id="timeline-title">USA 2026</h2>
-      </div>
+      <div><span class="eyebrow">LÍNEA DE TIEMPO</span><h2 id="timeline-title">USA 2026</h2></div>
       <button class="round-button" data-close="timeline-dialog" type="button">✕</button>
     </header>
     <div id="timeline-content"></div>
   </div>
+</dialog>
+
+
+<dialog id="day-dialog">
+  <form id="day-form" class="dialog-card stop-form">
+    <header class="dialog-header">
+      <div>
+        <span class="eyebrow">GESTOR DE DÍAS Y RUTAS</span>
+        <h2 id="day-dialog-title">Agregar día</h2>
+      </div>
+      <button class="round-button" data-close="day-dialog" type="button">✕</button>
+    </header>
+
+    <input id="day-edit-id" type="hidden">
+
+    <label>Fecha
+      <input id="day-date" type="date" required>
+    </label>
+
+    <label>Nombre del día
+      <input id="day-title" required placeholder="Ej. Sacramento — Centro histórico">
+    </label>
+
+    <div class="form-grid">
+      <label>Ciudad de inicio
+        <input id="day-start-city" placeholder="Ej. Las Vegas">
+      </label>
+      <label>Ciudad de cierre
+        <input id="day-end-city" placeholder="Ej. Sacramento">
+      </label>
+    </div>
+
+    <label>Notas generales del día
+      <textarea id="day-notes" rows="4" placeholder="Hotel, reservas, recomendaciones o detalles importantes"></textarea>
+    </label>
+
+    <div class="dialog-actions stop-dialog-actions">
+      <button type="button" class="action secondary" data-close="day-dialog">Cancelar</button>
+      <button type="submit" class="action primary">Guardar día</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="stop-dialog">
+  <form id="stop-form" class="dialog-card stop-form">
+    <header class="dialog-header">
+      <div>
+        <span class="eyebrow">GESTOR DE PARADAS</span>
+        <h2 id="stop-dialog-title">Agregar parada</h2>
+      </div>
+      <button class="round-button" data-close="stop-dialog" type="button">✕</button>
+    </header>
+
+    <input id="stop-edit-day-id" type="hidden">
+    <input id="stop-edit-id" type="hidden">
+
+    <label>Día del viaje
+      <select id="stop-day" required></select>
+    </label>
+
+    <label>Nombre de la parada
+      <input id="stop-name" required placeholder="Ej. Hoover Dam">
+    </label>
+
+    <div class="form-grid">
+      <label>Tipo
+        <select id="stop-type">
+          <option value="attraction">📍 Atracción</option>
+          <option value="parking">🅿️ Estacionamiento</option>
+          <option value="food">🍔 Comida</option>
+          <option value="hotel">🏨 Hotel</option>
+          <option value="fuel">⛽ Gasolina</option>
+          <option value="photo">📸 Fotografía</option>
+          <option value="other">⭐ Otro</option>
+        </select>
+      </label>
+
+      <label>Hora
+        <input id="stop-time" type="time" required>
+      </label>
+    </div>
+
+    <label>Dirección
+      <input id="stop-address" required placeholder="Dirección completa">
+    </label>
+
+    <div class="form-grid">
+      <label>Latitud
+        <input id="stop-lat" type="number" step="any" placeholder="Opcional">
+      </label>
+      <label>Longitud
+        <input id="stop-lng" type="number" step="any" placeholder="Opcional">
+      </label>
+    </div>
+
+    <div class="form-grid">
+      <label>Origen
+        <select id="stop-source">
+          <option value="user">Agregada por mí</option>
+          <option value="recommended">Recomendada</option>
+        </select>
+      </label>
+
+      <label>Prioridad
+        <select id="stop-priority">
+          <option value="required">Obligatoria</option>
+          <option value="preferred">Preferida</option>
+          <option value="optional">Opcional</option>
+        </select>
+      </label>
+    </div>
+
+    <label>Duración estimada (minutos)
+      <input id="stop-duration" type="number" min="0" step="5" value="30">
+    </label>
+
+    <label>Consejo o nota
+      <textarea id="stop-tip" rows="3" placeholder="Consejo, parking, foto o detalle importante"></textarea>
+    </label>
+
+    <div class="dialog-actions stop-dialog-actions">
+      <button type="button" class="action secondary" data-close="stop-dialog">Cancelar</button>
+      <button type="submit" class="action primary">Guardar parada</button>
+    </div>
+  </form>
 </dialog>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
