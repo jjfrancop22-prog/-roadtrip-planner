@@ -1,7 +1,7 @@
 {
-  "name": "RoadTrip AI Day & Route Manager",
+  "name": "RoadTrip AI Smart Route",
   "short_name": "RoadTrip AI",
-  "description": "Gestión de días, rutas, paradas, horarios y estacionamientos inteligentes.",
+  "description": "Motor automático de distancias, conducción, llegadas y salidas, con Smart Parking AI.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

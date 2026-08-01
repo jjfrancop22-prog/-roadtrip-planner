@@ -11,8 +11,8 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="./css/app.css">
-<title>RoadTrip AI</title>
+<link rel="stylesheet" href="./css/app.css?v=2.5.0-b">
+<title>RoadTrip AI V2.5.0-A</title>
 </head>
 <body>
 <div id="map"></div>
@@ -65,6 +65,11 @@
       <input id="day-title" required placeholder="Ej. Sacramento — Centro histórico">
     </label>
 
+    <label>Hora de salida del día
+      <input id="day-start-time" type="time" value="07:00" required>
+      <small>Las llegadas y salidas de todas las paradas se calculan automáticamente.</small>
+    </label>
+
     <div class="form-grid">
       <label>Ciudad de inicio
         <input id="day-start-city" placeholder="Ej. Las Vegas">
@@ -97,6 +102,37 @@
 
     <input id="stop-edit-day-id" type="hidden">
     <input id="stop-edit-id" type="hidden">
+
+
+    <section class="smart-search-shell" aria-label="Buscador inteligente de lugares">
+      <div class="smart-search-heading">
+        <div>
+          <span class="eyebrow">SMART PLACES</span>
+          <strong>Buscar en OpenStreetMap</strong>
+        </div>
+        <span id="smart-search-provider-status" class="smart-search-provider">LISTO</span>
+      </div>
+
+      <div id="smart-search-form" class="smart-search-bar" role="search">
+        <span aria-hidden="true">🔍</span>
+        <input
+          id="smart-search-input"
+          type="search"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Ej. Mono Lake, Bellagio, hotel en Sacramento"
+          aria-label="Buscar un lugar">
+        <button id="smart-search-submit" type="button">Buscar</button>
+      </div>
+
+      <p class="smart-search-help">
+        Escribe un nombre y pulsa <strong>Buscar</strong> o Enter. Las búsquedas recientes sí aparecen mientras escribes.
+      </p>
+
+      <div id="smart-search-feedback" class="smart-search-feedback" aria-live="polite"></div>
+      <div id="smart-search-results" class="smart-search-results"></div>
+      <div id="smart-place-selected" class="smart-place-selected hidden"></div>
+    </section>
 
     <label>Día del viaje
       <select id="stop-day" required></select>
@@ -170,6 +206,6 @@
 </dialog>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="./js/app.js"></script>
+<script type="module" src="./js/app.js?v=2.5.0-b"></script>
 </body>
 </html>

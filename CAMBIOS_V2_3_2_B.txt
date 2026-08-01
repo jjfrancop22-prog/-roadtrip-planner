@@ -1,0 +1,8 @@
+ROADTRIP AI V2.3.2-B — CORRECCIÓN SMART ROUTE ENGINE
+
+- Corrige la caché que podía seguir mostrando la interfaz anterior.
+- Las paradas heredadas ya no conservan automáticamente 1 hora.
+- Aplica duración inteligente: miradores/fotos/dunas 30 min, parques 45 min, museos/senderos 60 min, comida 60 min, hotel 30 min.
+- La duración editada por el usuario queda marcada como manual y se respeta.
+- Mantiene cálculo OSRM de distancia y conducción entre cada parada.
+- Recalcula llegada y salida desde la hora de salida del día.

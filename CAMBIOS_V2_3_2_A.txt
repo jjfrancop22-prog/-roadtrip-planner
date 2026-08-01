@@ -1,0 +1,22 @@
+ROADTRIP AI V2.3.2-A — SMART ROUTE ENGINE
+
+NUEVO
+- Hora de salida configurable para cada día.
+- Cálculo automático de ruta entre paradas mediante OSRM cuando hay Internet.
+- Distancia y tiempo de conducción por cada tramo.
+- Hora automática de llegada y salida de cada destino.
+- Duración de visita incluida en el cálculo.
+- Recalculo al agregar, editar, mover, duplicar o eliminar paradas.
+- El primer trayecto del día utiliza como origen la última parada geolocalizada del día anterior (por ejemplo, el hotel).
+- Resumen visual por parada: llegada, visita, conducción, distancia y salida.
+- Caché PWA actualizado a V2.3.2-A.
+
+USO
+1. Abra Línea de tiempo.
+2. En cada día, configure la hora de “Salida”.
+3. Agregue destinos con coordenadas desde Smart Places.
+4. El itinerario se recalculará automáticamente.
+
+NOTA
+- El cálculo por carretera requiere conexión a Internet.
+- Sin conexión, se mantienen las paradas y tiempos de visita, pero el tramo puede mostrarse sin distancia de carretera.

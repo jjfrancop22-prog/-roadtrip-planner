@@ -1,32 +1,36 @@
-# RoadTrip AI V2.2.1 — Gestor de días y rutas
+# RoadTrip AI V2.3.1 — Smart Parking AI
 
-## Funciones nuevas
-- Crear días.
-- Editar fecha, nombre, ciudad de inicio y ciudad de cierre.
-- Agregar notas generales.
-- Eliminar días vacíos.
-- Agregar paradas en cualquier día.
-- Mover una parada a otro día desde Editar.
-- Duplicar paradas.
-- Cambiar la hora.
-- Mover arriba o abajo.
-- Resumen de tiempo conduciendo y tiempo de visitas.
-- Totales generales del viaje.
+## Nuevo orden
+1. Parking oficial o propio de la atracción.
+2. Mejor opción gratuita válida.
+3. Mejor opción pagada por menor costo conocido.
+4. Tarifas desconocidas al final.
 
-## Funciones conservadas
-- Apple Maps UI.
-- GPS, ETA y estados.
-- Gestor de paradas.
-- Parking AI: gratis primero y pagados por menor costo.
-- Favoritos, alternativas y navegación.
-- LocalStorage.
+## Filtros
+Se excluyen:
+- parkings de aeropuerto cuando la atracción no es el aeropuerto;
+- terminales y lotes de empleados;
+- parkings residenciales;
+- accesos privados, por permiso o solo para clientes;
+- opciones a más de 2.5 km del destino;
+- duplicados geográficos.
 
-## Cómo probar
-1. Abre la línea de tiempo.
-2. Pulsa `Crear nuevo día`.
-3. Edita un día con `Día`.
-4. Usa el lápiz de una parada para cambiarla a otro día.
-5. Usa `⧉` para duplicar.
-6. Un día solo puede eliminarse cuando está vacío.
+## Base oficial inicial
+- Welcome to Fabulous Las Vegas Sign.
+- Bellagio.
+- Sphere.
+- AREA15.
+- Fremont Street Experience.
 
-Carpeta completa e independiente.
+## Indicadores
+- Parking oficial.
+- Gratis / pago / condicional.
+- Caminata estimada.
+- Confianza.
+- Puntuación de seguridad/contexto.
+- Fuente.
+- Botón `Ir al parking`.
+
+## Importante
+La caminata se estima por distancia geográfica y no sustituye una ruta peatonal real.
+Las tarifas pueden cambiar y deben confirmarse antes de estacionar.

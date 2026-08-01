@@ -1,0 +1,10 @@
+ROADTRIP AI V2.5.0-B — ITINERARIO LV → SACRAMENTO AUTOMÁTICO
+
+- Reemplaza únicamente el día Las Vegas → Sacramento.
+- Carga las 12 paradas solicitadas en el orden indicado.
+- Salida del día fijada a las 07:00.
+- Incluye coordenadas para cálculo automático por carretera.
+- Calcula distancia, conducción, llegada y salida en cada parada mediante OSRM.
+- Recalcula al editar duración, mover, agregar o eliminar paradas.
+- Incluye migración única para reemplazar el itinerario que ya esté guardado en el navegador.
+- Conserva el resto de viajes, días, arquitectura, parking y funciones existentes.

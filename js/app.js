@@ -1,9 +1,33 @@
 
 import {load,save} from "./storage.js";
 import {seed} from "./seed.js";
-import {mapsUrl,haversineMeters,miles} from "./maps.js";
+import {mapsUrl,haversineMeters,miles} from "./maps-engine.js";
+import {initSmartSearch, resetSmartSearch} from "./smart-search.js";
+import {searchNearbyParking} from "./api.js";
+import {findOfficialParking} from "./official-parking.js";
+import {initDevPanel, updateDevPanel} from "./dev-panel.js";
+import {formatDistance as routeDistance,formatDuration as routeDuration} from "./route-engine.js";
+import {recalculateDaySchedule} from "./schedule-engine.js";
 
 let state=load()||structuredClone(seed);
+
+// Migración controlada: reemplaza únicamente el día Las Vegas → Sacramento
+// por el itinerario oficial solicitado, una sola vez por instalación.
+const OFFICIAL_LV_SAC_VERSION="2.5.0-B-lv-sac";
+if(state?.itineraryMigrations?.lvSacramento!==OFFICIAL_LV_SAC_VERSION){
+  const sourceTrip=seed.trips.find(trip=>trip.id==="usa-2026");
+  const sourceDay=sourceTrip?.days.find(day=>day.id==="sac-day");
+  const targetTrip=state.trips?.find(trip=>trip.id==="usa-2026");
+  const targetIndex=targetTrip?.days?.findIndex(day=>day.id==="sac-day")??-1;
+  if(sourceDay&&targetTrip){
+    const replacement=structuredClone(sourceDay);
+    if(targetIndex>=0)targetTrip.days.splice(targetIndex,1,replacement);
+    else targetTrip.days.push(replacement);
+  }
+  state.itineraryMigrations={...(state.itineraryMigrations||{}),lvSacramento:OFFICIAL_LV_SAC_VERSION};
+  save(state);
+}
+
 let activeTrip=state.trips.find(t=>t.id===state.selectedTripId)||state.trips[0];
 let userLocation=null,userAccuracy=null,userMarker=null,accuracyCircle=null,routeLine=null,watchId=null;
 let currentWeather=null,currentLegRoute=null,lastArrivalStopId=null;
@@ -166,6 +190,12 @@ function estimateParkingCost(option,stop){
       if(durationMinutes<=240)return 15;
       if(durationMinutes<=360)return 20;
       return 25;
+    case "fremont-current":{
+      const weekend=day===0||day===5||day===6;
+      const hourly=weekend?Number(option.hourlyCostWeekend||5):Number(option.hourlyCostWeekday||4);
+      const cap=weekend?Number(option.dailyCapWeekend||25):Number(option.dailyCapWeekday||20);
+      return Math.min(cap,Math.ceil(durationMinutes/60)*hourly);
+    }
     default:
       return Number.isFinite(Number(option.estimatedCost))?Number(option.estimatedCost):null;
   }
@@ -206,8 +236,21 @@ function buildParkingCandidates(stop){
     source:"catalog",
     meters:distanceMeters(stop,option)
   }));
+  const officialOptions=(stop.officialParkingOptions||[]).map(option=>({
+    ...option,
+    source:"official-database",
+    meters:distanceMeters(stop,option)
+  }));
+  const smartOptions=(stop.smartParkingOptions||[]).map(option=>({
+    ...option,
+    source:option.source||"openstreetmap",
+    meters:distanceMeters(stop,option)
+  }));
 
-  return [...userOptions,...catalogOptions].map(option=>{
+  return normalizeSmartParkingOptions(
+    [...officialOptions,...userOptions,...smartOptions,...catalogOptions],
+    stop
+  ).map(option=>{
     const favorite=isParkingFavorite(option);
     const walking=option.walkMinutes||walkingMinutesFromMeters(option.meters)||60;
     const estimatedCost=estimateParkingCost(option,stop);
@@ -221,9 +264,12 @@ function buildParkingCandidates(stop){
       displayCost:costLabelForOption(option,stop)
     };
   }).sort((a,b)=>{
+    const officialA=a.official?0:1,officialB=b.official?0:1;
+    if(officialA!==officialB)return officialA-officialB;
     if(a.pricingGroup!==b.pricingGroup)return a.pricingGroup-b.pricingGroup;
     if(a.pricingGroup===1&&a.estimatedCost!==b.estimatedCost)return a.estimatedCost-b.estimatedCost;
     if(a.favorite!==b.favorite)return a.favorite?-1:1;
+    if((a.smartScore||0)!==(b.smartScore||0))return (b.smartScore||0)-(a.smartScore||0);
     return a.walkMinutes-b.walkMinutes;
   });
 }
@@ -267,7 +313,7 @@ function ensureStopMetadata(){
     stop.type=stop.type||"attraction";
     stop.source=stop.source||"recommended";
     stop.priority=stop.priority||"preferred";
-    stop.durationMinutes=Number(stop.durationMinutes||30);
+    if(stop.durationSource!=="manual") stop.durationSource="smart";
   }));
   save(state);
 }
@@ -278,10 +324,22 @@ function ensureDayMetadata(){
     day.startCity=day.startCity||"";
     day.endCity=day.endCity||"";
     day.notes=day.notes||"";
+    day.startTime=day.startTime||"07:00";
   });
   save(state);
 }
 ensureDayMetadata();
+
+async function recalculateDay(day){
+  const dayIndex=activeTrip.days.findIndex(item=>item.id===day.id);
+  const previousDay=dayIndex>0?activeTrip.days[dayIndex-1]:null;
+  const previousStop=previousDay?.stops?.filter(stop=>Number.isFinite(stop.lat)&&Number.isFinite(stop.lng)).at(-1)||null;
+  await recalculateDaySchedule(day,{origin:previousStop,routeProvider:route});
+}
+async function recalculateAllDays(){
+  for(const day of activeTrip.days)await recalculateDay(day);
+  save(state);
+}
 
 const dayRouteCache=new Map();
 function dayCacheKey(day){
@@ -352,12 +410,14 @@ function openDayDialog(dayId=""){
     document.querySelector("#day-start-city").value=day.startCity||"";
     document.querySelector("#day-end-city").value=day.endCity||"";
     document.querySelector("#day-notes").value=day.notes||"";
+    document.querySelector("#day-start-time").value=day.startTime||"07:00";
   }else{
     const dates=activeTrip.days.map(day=>day.date).filter(Boolean).sort();
     if(dates.length){
       const next=new Date(`${dates[dates.length-1]}T12:00:00`);
       next.setDate(next.getDate()+1);
       document.querySelector("#day-date").value=next.toISOString().slice(0,10);
+      document.querySelector("#day-start-time").value="07:00";
     }
   }
   dialog.showModal();
@@ -369,7 +429,8 @@ async function saveDayFromForm(){
     title:document.querySelector("#day-title").value.trim(),
     startCity:document.querySelector("#day-start-city").value.trim(),
     endCity:document.querySelector("#day-end-city").value.trim(),
-    notes:document.querySelector("#day-notes").value.trim()
+    notes:document.querySelector("#day-notes").value.trim(),
+    startTime:document.querySelector("#day-start-time").value||"07:00"
   };
   if(editId){
     const day=activeTrip.days.find(item=>item.id===editId);
@@ -379,6 +440,7 @@ async function saveDayFromForm(){
     activeTrip.days.push({id:uid("day"),...data,stops:[]});
   }
   sortTripDays();
+  await recalculateAllDays();
   dayRouteCache.clear();
   save(state);
   fillDayOptions();
@@ -418,7 +480,7 @@ async function duplicateStop(dayId,stopId){
   date.setMinutes(date.getMinutes()+15);
   copy.time=`${String(date.getHours()).padStart(2,"0")}:${String(date.getMinutes()).padStart(2,"0")}`;
   day.stops.push(copy);
-  sortDayStops(day);
+  await recalculateDay(day);
   dayRouteCache.clear();
   normalizeStatuses();
   save(state);
@@ -432,8 +494,229 @@ function fillDayOptions(selectedDayId=""){
   const select=document.querySelector("#stop-day");
   select.innerHTML=activeTrip.days.map(day=>`<option value="${day.id}" ${day.id===selectedDayId?"selected":""}>${day.date||""} · ${day.title}</option>`).join("");
 }
+
+
+
+function parkingRestrictionReason(option,destination){
+  const text=`${option.name||""} ${option.address||""} ${option.access||""}`.toLowerCase();
+  const meters=distanceMeters(destination,option);
+  if(["private","customers","permit","residents"].includes(String(option.access||"").toLowerCase()))
+    return "Acceso restringido";
+  if(/airport|terminal|employee|resident lot|residential|rental car/.test(text))
+    return "No corresponde a visitantes de esta atracción";
+  if(meters!=null&&meters>2500)
+    return "Demasiado lejos";
+  return "";
+}
+function parkingCategory(option){
+  if(option.official)return 0;
+  if(option.costType==="free")return 1;
+  if(option.estimatedCost!=null||option.costType==="paid")return 2;
+  return 3;
+}
+function parkingSafetyScore(option){
+  const text=`${option.name||""} ${option.address||""}`.toLowerCase();
+  let score=50;
+  if(option.official)score+=35;
+  if(option.verified)score+=10;
+  if(/garage|self.parking|parking lot/.test(text))score+=5;
+  if(/street|roadside/.test(text))score-=8;
+  return Math.max(0,Math.min(score,100));
+}
+function smartParkingScore(option,destination){
+  const meters=distanceMeters(destination,option)??99999;
+  const walking=option.walkMinutes||walkingMinutesFromMeters(meters)||999;
+  const category=parkingCategory(option);
+  const categoryBonus=[500,300,180,40][category];
+  const distancePenalty=Math.min(220,walking*5);
+  const favoriteBonus=isParkingFavorite(option)?30:0;
+  return Math.round(categoryBonus+parkingSafetyScore(option)+favoriteBonus-distancePenalty);
+}
+function normalizeSmartParkingOptions(options,destination){
+  const unique=new Map();
+  for(const option of options){
+    const reason=parkingRestrictionReason(option,destination);
+    if(reason)continue;
+    const meters=distanceMeters(destination,option);
+    const normalized={
+      ...option,
+      meters,
+      walkMinutes:option.walkMinutes||walkingMinutesFromMeters(meters),
+      safetyScore:parkingSafetyScore(option)
+    };
+    normalized.smartScore=smartParkingScore(normalized,destination);
+    const key=`${Math.round((normalized.lat||0)*10000)}:${Math.round((normalized.lng||0)*10000)}`;
+    const existing=unique.get(key);
+    if(!existing||normalized.smartScore>existing.smartScore)unique.set(key,normalized);
+  }
+  return [...unique.values()].sort((a,b)=>{
+    const categoryDiff=parkingCategory(a)-parkingCategory(b);
+    if(categoryDiff)return categoryDiff;
+    if(parkingCategory(a)===2){
+      const costA=a.estimatedCost??9999,costB=b.estimatedCost??9999;
+      if(costA!==costB)return costA-costB;
+    }
+    if(a.smartScore!==b.smartScore)return b.smartScore-a.smartScore;
+    return (a.walkMinutes||999)-(b.walkMinutes||999);
+  });
+}
+
+function minutesFromTime(value){
+  const [hours,minutes]=(value||"09:00").split(":").map(Number);
+  return (hours||0)*60+(minutes||0);
+}
+function timeFromMinutes(total){
+  const safe=Math.max(0,Math.min(total,23*60+45));
+  return `${String(Math.floor(safe/60)).padStart(2,"0")}:${String(safe%60).padStart(2,"0")}`;
+}
+function suggestTimeForDay(day,durationMinutes=60){
+  const ordered=[...day.stops].sort((a,b)=>(a.time||"99:99").localeCompare(b.time||"99:99"));
+  if(!ordered.length)return "09:00";
+  const last=ordered[ordered.length-1];
+  const proposed=minutesFromTime(last.time)+Number(last.durationMinutes||30)+30;
+  return timeFromMinutes(Math.ceil(proposed/15)*15);
+}
+function durationForPlace(place){
+  const value=`${place.category||""} ${place.type||""}`.toLowerCase();
+  if(/hotel|motel|hostel|guest_house/.test(value))return 30;
+  if(/restaurant|fast_food|cafe/.test(value))return 60;
+  if(/fuel|charging_station/.test(value))return 20;
+  if(/parking/.test(value))return 10;
+  if(/museum|theme_park|attraction|park|nature_reserve|lake/.test(value))return 90;
+  return 60;
+}
+function stopTypeForPlace(place){
+  const typeMap={
+    hotel:"hotel",motel:"hotel",hostel:"hotel",guest_house:"hotel",
+    restaurant:"food",fast_food:"food",cafe:"food",bar:"food",
+    fuel:"fuel",charging_station:"fuel",
+    parking:"parking",parking_entrance:"parking",
+    viewpoint:"photo",museum:"attraction",attraction:"attraction",
+    theme_park:"attraction",park:"attraction",nature_reserve:"attraction"
+  };
+  return typeMap[place.type]||typeMap[place.category]||"attraction";
+}
+function estimateTravelToStop(day,stop){
+  const previous=[...day.stops]
+    .filter(item=>typeof item.lat==="number"&&typeof item.lng==="number")
+    .sort((a,b)=>(a.time||"99:99").localeCompare(b.time||"99:99"))
+    .at(-1);
+  if(!previous)return {distanceMiles:0,fuelGallons:0,fuelCost:0,driveMinutes:0};
+  const meters=haversineMeters(
+    {lat:previous.lat,lng:previous.lng},
+    {lat:stop.lat,lng:stop.lng}
+  )||0;
+  const distanceMiles=meters/1609.344;
+  const mpg=Number(state.travelSettings?.vehicleMpg||25);
+  const price=Number(state.travelSettings?.fuelPricePerGallon||4);
+  const fuelGallons=distanceMiles/mpg;
+  return {
+    distanceMiles,
+    fuelGallons,
+    fuelCost:fuelGallons*price,
+    driveMinutes:Math.round(distanceMiles/45*60)
+  };
+}
+async function addSmartPlaceToTrip(place){
+  const targetDayId=document.querySelector("#stop-day").value||activeTrip.days[0]?.id;
+  const day=activeTrip.days.find(item=>item.id===targetDayId);
+  if(!day)throw new Error("Selecciona un día del viaje.");
+
+  const type=stopTypeForPlace(place);
+  const durationMinutes=durationForPlace(place);
+  const stop={
+    id:uid("stop"),
+    name:place.name||place.displayName?.split(",")[0]||"Lugar",
+    type,
+    icon:stopIcons[type]||"📍",
+    time:suggestTimeForDay(day,durationMinutes),
+    address:place.displayName||"",
+    lat:Number(place.lat),
+    lng:Number(place.lng),
+    source:"user",
+    priority:"preferred",
+    durationMinutes,
+    durationSource:"smart",
+    tip:`Agregada automáticamente desde OpenStreetMap${place.city?` · ${place.city}`:""}${place.state?` · ${place.state}`:""}.`,
+    completed:false,
+    status:"pending",
+    smartPlace:{
+      provider:"OpenStreetMap",
+      osmType:place.osmType,
+      osmId:place.osmId,
+      category:place.category,
+      placeType:place.type,
+      city:place.city,
+      state:place.state,
+      country:place.country
+    }
+  };
+
+  stop.travelEstimate=estimateTravelToStop(day,stop);
+
+  if(type!=="parking"){
+    stop.officialParkingOptions=findOfficialParking(place);
+    try{
+      const parkingOptions=await searchNearbyParking(place,{limit:10});
+      stop.smartParkingOptions=normalizeSmartParkingOptions(
+        parkingOptions.map(option=>({
+          ...option,
+          meters:distanceMeters(stop,option),
+          walkMinutes:walkingMinutesFromMeters(distanceMeters(stop,option))
+        })),
+        stop
+      );
+    }catch(error){
+      stop.smartParkingOptions=[];
+      stop.parkingSearchError=error.message;
+    }
+  }
+
+  day.stops.push(stop);
+  await recalculateDay(day);
+  dayRouteCache.clear();
+  normalizeStatuses();
+  save(state);
+  await drawMap();
+  timeline();
+  await renderSheet({...stop,dayId:day.id,dayTitle:day.title});
+  document.querySelector("#stop-dialog").close();
+
+  const parking=parkingRecommendation({...stop,dayId:day.id,dayTitle:day.title}).recommended;
+  const parkingText=parking
+    ? `${parking.official?"Parking oficial":parking.costType==="free"?"Mejor parking gratis":"Parking recomendado"}: ${parking.name}`
+    : "No se encontró parking cercano con datos suficientes.";
+  alert(`Parada agregada a ${day.title} a las ${stop.time}.\n${parkingText}`);
+}
+
+function applySmartPlaceToStopForm(place){
+  const typeMap={
+    hotel:"hotel",motel:"hotel",hostel:"hotel",guest_house:"hotel",
+    restaurant:"food",fast_food:"food",cafe:"food",bar:"food",
+    fuel:"fuel",charging_station:"fuel",
+    parking:"parking",parking_entrance:"parking",
+    viewpoint:"photo",museum:"attraction",attraction:"attraction",
+    theme_park:"attraction",park:"attraction",nature_reserve:"attraction"
+  };
+  const categoryKey=place.type||place.category||"";
+  const stopType=typeMap[categoryKey]||typeMap[place.category]||"attraction";
+
+  document.querySelector("#stop-name").value=place.name||place.displayName?.split(",")[0]||"";
+  document.querySelector("#stop-address").value=place.displayName||"";
+  document.querySelector("#stop-lat").value=Number.isFinite(place.lat)?place.lat:"";
+  document.querySelector("#stop-lng").value=Number.isFinite(place.lng)?place.lng:"";
+  document.querySelector("#stop-type").value=stopType;
+  document.querySelector("#stop-source").value="user";
+  document.querySelector("#stop-tip").value=`Lugar seleccionado desde OpenStreetMap${place.city?` · ${place.city}`:""}${place.state?` · ${place.state}`:""}.`;
+
+  const selected=document.querySelector("#smart-place-selected");
+  selected.classList.remove("hidden");
+  selected.innerHTML=`<strong>✓ Lugar seleccionado</strong><span>${place.name}</span><small>${place.displayName}</small>`;
+}
+
 function openStopDialog(dayId="",stopId=""){
   const dialog=document.querySelector("#stop-dialog");
+  resetSmartSearch();
   const form=document.querySelector("#stop-form");
   form.reset();
   document.querySelector("#stop-edit-day-id").value="";
@@ -482,6 +765,7 @@ async function saveStopFromForm(){
     source:document.querySelector("#stop-source").value,
     priority:document.querySelector("#stop-priority").value,
     durationMinutes:Number(document.querySelector("#stop-duration").value)||30,
+    durationSource:"manual",
     tip:document.querySelector("#stop-tip").value.trim(),
     parkingCostType:type==="parking"?"unknown":undefined,
     parkingCostLabel:type==="parking"?"Tarifa no registrada":undefined,
@@ -501,7 +785,7 @@ async function saveStopFromForm(){
     targetDay.stops.push({id:uid("stop"),...data});
   }
 
-  targetDay.stops.sort((a,b)=>(a.time||"99:99").localeCompare(b.time||"99:99"));
+  await recalculateAllDays();
   dayRouteCache.clear();
   normalizeStatuses();
   save(state);
@@ -515,6 +799,7 @@ async function deleteStop(dayId,stopId){
   if(!day||!stop)return;
   if(!confirm(`¿Eliminar la parada "${stop.name}"?`))return;
   day.stops=day.stops.filter(stop=>stop.id!==stopId);
+  await recalculateAllDays();
   dayRouteCache.clear();
   normalizeStatuses();
   save(state);
@@ -543,7 +828,7 @@ async function route(points){
     const coords=points.map(p=>`${p.lng},${p.lat}`).join(";");
     const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
     const d=await r.json(),x=d.routes?.[0];if(!x)return null;
-    return {coords:x.geometry.coordinates.map(([lng,lat])=>[lat,lng]),meters:x.distance,seconds:x.duration};
+    return {coords:x.geometry.coordinates.map(([lng,lat])=>[lat,lng]),meters:x.distance,seconds:x.duration,legs:x.legs||[]};
   }catch{return null}
 }
 async function drawMap(){
@@ -600,9 +885,11 @@ function renderParkingAlternative(stop,option,index){
 }
 function renderParkingGroups(stop,result){
   const all=[result.recommended,...result.alternatives].filter(Boolean);
-  const free=all.filter(option=>option.pricingGroup===0);
-  const paid=all.filter(option=>option.pricingGroup===1);
-  const unknown=all.filter(option=>option.pricingGroup===2);
+  const official=all.filter(option=>option.official);
+  const nonOfficial=all.filter(option=>!option.official);
+  const free=nonOfficial.filter(option=>option.pricingGroup===0);
+  const paid=nonOfficial.filter(option=>option.pricingGroup===1);
+  const unknown=nonOfficial.filter(option=>option.pricingGroup===2);
   const selectedKey=result.recommended?parkingKey(result.recommended):"";
 
   const renderGroup=(title,subtitle,items,className)=>items.length?`<section class="parking-choice-group ${className}">
@@ -617,9 +904,10 @@ function renderParkingGroups(stop,result){
   </section>`:"";
 
   return `<div class=parking-choice-list>
-    ${renderGroup("1. Opciones gratis","Primero se muestran por menor caminata",free,"free")}
-    ${renderGroup(free.length?"2. Opciones pagadas":"1. Opciones pagadas","Ordenadas del menor al mayor costo estimado",paid,"paid")}
-    ${renderGroup("Tarifa por confirmar","Se muestran al final porque no existe un precio fijo",unknown,"unknown")}
+    ${renderGroup("🥇 Parking oficial","Siempre tiene prioridad cuando existe",official,"official")}
+    ${renderGroup("🟢 Mejor opción gratuita","Solo opciones públicas y válidas para la atracción",free,"free")}
+    ${renderGroup("💰 Opciones pagadas","Ordenadas del menor al mayor costo estimado",paid,"paid")}
+    ${renderGroup("Tarifa por confirmar","Se muestran al final porque no existe un precio fiable",unknown,"unknown")}
   </div>`;
 }
 function renderParkingCard(stop){
@@ -649,21 +937,26 @@ function renderParkingCard(stop){
   return `<div class=parking-card>
     <div class=parking-card-head>
       <div>
-        <span class=parking-eyebrow>🅿️ PARKING AI · RECOMENDADO</span>
+        <span class=parking-eyebrow>${parking.official?"🥇 PARKING OFICIAL · RECOMENDADO":"🅿️ PARKING AI · RECOMENDADO"}</span>
         <strong>${parking.favorite?"⭐ ":""}${parking.name}</strong>
       </div>
       <span class="parking-engine-status">ACTIVO</span>
     </div>
     <div class=parking-score-row>
       <span class="parking-cost ${parkingBadgeClass(parking.costType)}">${parking.displayCost}</span>
-      <span class=parking-score>${parking.pricingGroup===0?"PRIMERA OPCIÓN GRATIS":parking.pricingGroup===1?"MENOR COSTO DISPONIBLE":"TARIFA POR CONFIRMAR"}</span>
+      <span class=parking-score>${parking.official?"PRIORIDAD OFICIAL":parking.pricingGroup===0?"MEJOR GRATIS VÁLIDO":parking.pricingGroup===1?"MENOR COSTO DISPONIBLE":"TARIFA POR CONFIRMAR"}</span>
     </div>
     <div class=parking-metrics>
       <span>🚶 ${walking} min caminando</span>
       ${distance?`<span>📏 ${distance}</span>`:""}
-      <span>${parking.source==="itinerary"?"👤 Agregado por ti":"✨ Recomendado"}</span>
+      <span>${parking.official?"✅ Oficial verificado":parking.source==="itinerary"?"👤 Agregado por ti":"✨ Alternativa encontrada"}</span>
     </div>
     <p>${parking.note||""}</p>
+    <div class=parking-trust-row>
+      <span>🛡 Confianza ${parking.official?"alta":parking.verified?"media-alta":"media"}</span>
+      <span>⭐ ${parking.safetyScore||parkingSafetyScore(parking)}/100</span>
+      ${parking.sourceLabel?`<span>Fuente: ${parking.sourceLabel}</span>`:""}
+    </div>
     <div class=parking-actions-three>
       <a target=_blank rel=noopener href="${mapsUrl(parking.address)}">🧭 Ir al parking</a>
       <button data-favorite-parking="${stop.id}|${parkingKey(parking)}">${parking.favorite?"★ Favorito":"☆ Favorito"}</button>
@@ -759,17 +1052,20 @@ function sortDayStops(day){
   day.stops.sort((a,b)=>(a.time||"99:99").localeCompare(b.time||"99:99"));
 }
 async function quickChangeTime(dayId,stopId,newTime){
-  const stop=realStop(dayId,stopId);
-  if(!stop||!newTime)return;
-  stop.time=newTime;
-  dayRouteCache.clear();
   const day=activeTrip.days.find(item=>item.id===dayId);
-  sortDayStops(day);
+  if(!day||!newTime)return;
+  if(day.stops[0]?.id===stopId)day.startTime=newTime;
+  else{
+    const stop=realStop(dayId,stopId);
+    if(stop)stop.time=newTime;
+  }
+  await recalculateDay(day);
+  dayRouteCache.clear();
   normalizeStatuses();
   save(state);
   await drawMap();
   timeline();
-  await renderSheet(nextStop()||stop);
+  await renderSheet(nextStop()||realStop(dayId,stopId));
 }
 async function moveStop(dayId,stopId,direction){
   const day=activeTrip.days.find(item=>item.id===dayId);
@@ -779,12 +1075,8 @@ async function moveStop(dayId,stopId,direction){
   if(index<0||newIndex<0||newIndex>=day.stops.length)return;
 
   const current=day.stops[index];
-  const target=day.stops[newIndex];
-  const currentTime=current.time;
-  current.time=target.time;
-  target.time=currentTime;
-
   [day.stops[index],day.stops[newIndex]]=[day.stops[newIndex],day.stops[index]];
+  await recalculateDay(day);
   dayRouteCache.clear();
   normalizeStatuses();
   save(state);
@@ -798,6 +1090,7 @@ async function deleteStopFromTimeline(dayId,stopId){
   if(!day||!stop)return;
   if(!confirm(`¿Eliminar la parada "${stop.name}"?`))return;
   day.stops=day.stops.filter(item=>item.id!==stopId);
+  await recalculateAllDays();
   dayRouteCache.clear();
   normalizeStatuses();
   save(state);
@@ -822,7 +1115,7 @@ function timeline(){
           <div class=timeline-day-title>
             <h3>${day.title}</h3>
             <small>${day.date||"Sin fecha"} · ${formatDayRoute(day)} · ${day.stops.length} parada(s)</small>
-            <span class=timeline-day-metrics data-day-metrics="${day.id}">Calculando duración…</span>
+            <div class=timeline-route-controls><label>🚗 Salida <input type=time value="${day.startTime||"07:00"}" data-day-start="${day.id}"></label><span class=timeline-day-metrics data-day-metrics="${day.id}">Calculando duración…</span></div>
           </div>
           <div class=timeline-day-actions>
             <button data-add-day="${day.id}">＋ Parada</button>
@@ -836,13 +1129,13 @@ function timeline(){
             <input type=checkbox data-timeline="${day.id}|${stop.id}" ${stop.completed?"checked":""}>
             <div class=timeline-main>
               <strong>${stop.icon} ${stop.name}</strong>
-              <div class=timeline-meta>
-                <label class=timeline-time-label>
-                  <span>Hora</span>
-                  <input class=timeline-time type=time value="${stop.time||""}" data-time-stop="${day.id}|${stop.id}">
-                </label>
+              <div class=timeline-meta smart-route-meta>
+                <span class=route-chip>🕒 Llega <strong>${stop.routeSchedule?.arrivalTime||stop.time||"—"}</strong></span>
+                <span class=route-chip>📸 Visita <strong>${formatMinutes(stop.durationMinutes||0)}</strong></span>
+                <span class=route-chip>🚗 ${routeDuration(stop.routeSchedule?.driveMinutes||0)}</span>
+                <span class=route-chip>📏 ${routeDistance(stop.routeSchedule?.driveMeters)}</span>
+                <span class=route-chip>↗ Sale <strong>${stop.routeSchedule?.departureTime||"—"}</strong></span>
                 <span class="timeline-status ${stop.status||"pending"}">${label(stop.status)}</span>
-                <span class=timeline-duration>⏱ ${formatMinutes(stop.durationMinutes||0)}</span>
               </div>
             </div>
             <div class=timeline-manager-actions>
@@ -869,6 +1162,16 @@ function timeline(){
     await drawMap();
     timeline();
     await renderSheet(nextStop()||stop);
+  });
+
+  document.querySelectorAll("[data-day-start]").forEach(input=>input.onchange=async()=>{
+    const day=activeTrip.days.find(item=>item.id===input.dataset.dayStart);
+    if(!day)return;
+    day.startTime=input.value||"07:00";
+    await recalculateDay(day);
+    save(state);
+    timeline();
+    await drawMap();
   });
 
   document.querySelectorAll("[data-time-stop]").forEach(input=>input.onchange=async()=>{
@@ -963,7 +1266,25 @@ document.querySelectorAll('[data-close="stop-dialog"]').forEach(button=>{
   button.onclick=()=>document.querySelector("#stop-dialog").close();
 });
 
+
+initSmartSearch({
+  onSelect:async place=>{
+    updateDevPanel({selectedPlace:place.name});
+    await addSmartPlaceToTrip(place);
+  },
+  onMetrics:metrics=>updateDevPanel(metrics)
+});
+initDevPanel({
+  version:"2.5.0-B",
+  getStats:()=>({
+    stops:allStops().length,
+    days:activeTrip.days.length,
+    localStorage:typeof localStorage!=="undefined"?"OK":"No disponible"
+  })
+});
+
 document.querySelector("#trip-title").textContent=activeTrip.name;
-document.querySelector("#trip-title").title="V2.2.1 · Gestor de días y rutas";
+document.querySelector("#trip-title").title="V2.5.0-B · Itinerario LV → Sacramento automático";
+await recalculateAllDays();
 await drawMap();await renderSheet();timeline();
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js"));

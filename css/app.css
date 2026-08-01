@@ -345,3 +345,139 @@ dialog::backdrop{background:rgba(15,23,42,.55);backdrop-filter:blur(6px)}.dialog
   .timeline-day-head{display:grid}
   .timeline-day-actions{justify-content:flex-start}
 }
+
+
+/* V2.3.0-A1 — Smart Search Engine */
+#stop-dialog .dialog-card{
+  background:#ffffff!important;color:#111827!important;
+  border:1px solid rgba(15,23,42,.12);box-shadow:0 24px 70px rgba(15,23,42,.38)
+}
+#stop-dialog .eyebrow{color:#64748b!important}
+#stop-dialog .round-button{background:#eef2f7!important;color:#111827!important}
+#stop-dialog .stop-form label{color:#111827!important}
+#stop-dialog .stop-form input,#stop-dialog .stop-form select,#stop-dialog .stop-form textarea{
+  background:#f8fafc!important;color:#111827!important;border:1px solid #cbd5e1!important
+}
+#stop-dialog .stop-form input::placeholder,#stop-dialog .stop-form textarea::placeholder{color:#64748b!important}
+
+.smart-search-shell{
+  display:grid;gap:10px;padding:14px;border-radius:18px;
+  background:linear-gradient(145deg,#eff6ff,#f8fafc);border:1px solid #bfdbfe
+}
+.smart-search-heading{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.smart-search-heading strong{display:block;margin-top:3px;color:#0f172a;font-size:.95rem}
+.smart-search-provider{
+  display:inline-flex;padding:5px 8px;border-radius:999px;background:#e2e8f0;color:#475569;
+  font-size:.62rem;font-weight:950;letter-spacing:.05em
+}
+.smart-search-provider.searching{background:#fef3c7;color:#92400e}
+.smart-search-provider.online{background:#dcfce7;color:#166534}
+.smart-search-provider.selected{background:#dbeafe;color:#1d4ed8}
+.smart-search-provider.error{background:#fee2e2;color:#b91c1c}
+.smart-search-bar{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;
+  padding:7px 7px 7px 12px;border:1px solid #94a3b8;border-radius:15px;background:#fff;
+  box-shadow:0 7px 22px rgba(15,23,42,.08)
+}
+.smart-search-bar input{
+  padding:10px 2px!important;border:0!important;background:#fff!important;
+  box-shadow:none!important;font-size:.92rem!important
+}
+.smart-search-bar button{
+  border:0;border-radius:11px;padding:10px 13px;background:#0a84ff;color:#fff;font-weight:900
+}
+.smart-search-bar button:disabled{opacity:.55}
+.smart-search-help{margin:0;color:#475569;font-size:.72rem;line-height:1.35}
+.smart-search-feedback{min-height:18px;color:#475569;font-size:.7rem;font-weight:800}
+.smart-search-results{display:grid;gap:8px;max-height:330px;overflow:auto}
+.smart-place-card{
+  display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center;
+  padding:11px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;
+  box-shadow:0 5px 14px rgba(15,23,42,.05)
+}
+.smart-place-icon{
+  width:42px;height:42px;display:grid;place-items:center;border-radius:13px;
+  background:#eff6ff;font-size:1.25rem
+}
+.smart-place-body{min-width:0}
+.smart-place-body strong{display:block;color:#0f172a;font-size:.86rem}
+.smart-place-body span,.smart-place-body small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.smart-place-body span{margin-top:3px;color:#334155;font-size:.7rem}
+.smart-place-body small{margin-top:3px;color:#64748b;font-size:.65rem}
+.smart-place-body em{display:inline-flex;margin-top:5px;padding:3px 6px;border-radius:999px;background:#f1f5f9;color:#475569;font-size:.58rem;font-style:normal;font-weight:900}
+.smart-place-card>button{
+  border:0;border-radius:10px;padding:9px 10px;background:#0a84ff;color:white;font-size:.7rem;font-weight:900
+}
+.smart-search-state{
+  display:grid;place-items:center;gap:5px;padding:18px;border:1px dashed #cbd5e1;border-radius:14px;
+  color:#475569;text-align:center;background:rgba(255,255,255,.7)
+}
+.smart-search-state strong{color:#0f172a;font-size:.82rem}
+.smart-search-state span{font-size:.68rem}
+.smart-search-state.error{border-color:#fecaca;background:#fff1f2}
+.search-spinner{width:22px;height:22px;border:3px solid #dbeafe;border-top-color:#0a84ff;border-radius:50%;animation:searchSpin .8s linear infinite}
+@keyframes searchSpin{to{transform:rotate(360deg)}}
+.smart-search-recent{display:grid;gap:7px}
+.smart-search-recent>strong{color:#334155;font-size:.74rem}
+.smart-search-recent>div{display:flex;gap:6px;flex-wrap:wrap}
+.smart-search-recent button{border:0;border-radius:999px;padding:7px 10px;background:#e2e8f0;color:#334155;font-size:.68rem;font-weight:850}
+.smart-place-selected{display:grid;gap:3px;padding:11px;border-radius:13px;background:#dcfce7;border:1px solid #86efac}
+.smart-place-selected strong{color:#166534;font-size:.74rem}
+.smart-place-selected span{color:#0f172a;font-size:.82rem;font-weight:850}
+.smart-place-selected small{color:#475569;font-size:.65rem}
+
+.dev-panel{position:fixed;right:14px;bottom:14px;z-index:1200;color:#e2e8f0}
+.dev-panel-toggle{width:44px;height:44px;border:0;border-radius:50%;background:#0f172a;color:white;box-shadow:0 12px 30px rgba(15,23,42,.35)}
+.dev-panel>section{width:280px;border-radius:17px;background:rgba(15,23,42,.96);box-shadow:0 20px 55px rgba(0,0,0,.4);overflow:hidden}
+.dev-panel.collapsed>section{display:none}
+.dev-panel:not(.collapsed)>.dev-panel-toggle{display:none}
+.dev-panel header{display:flex;justify-content:space-between;align-items:center;padding:11px 13px;border-bottom:1px solid rgba(148,163,184,.2)}
+.dev-panel header button{border:0;background:transparent;color:white;font-size:1.2rem}
+.dev-panel-body{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
+.dev-panel-body div{padding:8px;border-radius:10px;background:rgba(255,255,255,.06)}
+.dev-panel-body span{display:block;color:#94a3b8;font-size:.6rem}
+.dev-panel-body strong{display:block;margin-top:3px;color:#f8fafc;font-size:.72rem}
+@media(max-width:520px){
+  .smart-search-bar{grid-template-columns:auto minmax(0,1fr)}
+  .smart-search-bar button{grid-column:1/-1}
+  .smart-place-card{grid-template-columns:38px minmax(0,1fr)}
+  .smart-place-card>button{grid-column:1/-1}
+}
+
+/* V2.3.0-A1 FIX — Safari: no nested forms */
+#smart-search-form{margin:0}
+#stop-dialog .dialog-card{overflow:auto;max-height:min(92vh,900px)}
+#stop-dialog::backdrop{background:rgba(15,23,42,.62);backdrop-filter:blur(8px)}
+
+
+/* V2.3.0-A2 — Smart Add to Trip */
+.travel-estimate-card{
+  display:grid;gap:4px;margin-top:10px;padding:12px;border-radius:15px;
+  background:linear-gradient(135deg,rgba(48,209,88,.11),rgba(10,132,255,.09));
+  border:1px solid rgba(48,209,88,.22)
+}
+.travel-estimate-card strong{font-size:.78rem}
+.travel-estimate-card span{color:var(--muted);font-size:.7rem;font-weight:750}
+.smart-place-card>button{background:linear-gradient(135deg,#0a84ff,#0066dc)}
+.smart-search-provider.selected{background:#dcfce7;color:#166534}
+
+
+/* V2.3.1 — Smart Parking AI */
+.parking-trust-row{
+  display:flex;gap:6px;flex-wrap:wrap;margin-top:9px
+}
+.parking-trust-row span{
+  padding:5px 7px;border-radius:999px;background:rgba(148,163,184,.13);
+  color:var(--muted);font-size:.62rem;font-weight:850
+}
+.parking-choice-group.official{
+  border:1px solid rgba(255,159,10,.35);
+  background:linear-gradient(135deg,rgba(255,159,10,.12),rgba(255,214,10,.08))
+}
+.parking-choice-group.official>header strong{color:#9a6700}
+.parking-choice-group.official .parking-choice.selected{
+  background:rgba(255,159,10,.14)
+}
+
+/* V2.3.2-A · Smart Route Engine */
+.timeline-route-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}.timeline-route-controls label{display:flex;align-items:center;gap:6px;background:#eaf3ff;color:#0878e8;border-radius:999px;padding:6px 10px;font-weight:800}.timeline-route-controls input{border:0;background:transparent;color:inherit;font:inherit;width:92px}.smart-route-meta{display:flex!important;flex-wrap:wrap;gap:7px!important;margin-top:8px}.route-chip{display:inline-flex;align-items:center;gap:4px;background:#f1f4f8;border-radius:999px;padding:6px 10px;color:#576171;font-size:.86rem;white-space:nowrap}.route-chip strong{color:#111827}.timeline-status{align-self:center}@media(max-width:680px){.smart-route-meta{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))}.route-chip{justify-content:center;font-size:.78rem;padding:6px 7px}.timeline-route-controls{align-items:flex-start}.timeline-day-head{align-items:flex-start}}
