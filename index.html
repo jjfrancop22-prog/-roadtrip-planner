@@ -11,8 +11,8 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="./css/app.css?v=2.5.0-b">
-<title>RoadTrip AI V2.5.0-A</title>
+<link rel="stylesheet" href="./css/app.css?v=3.1.0">
+<title>RoadTrip AI V3.1.0</title>
 </head>
 <body>
 <div id="map"></div>
@@ -206,6 +206,20 @@
 </dialog>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="./js/app.js?v=2.5.0-b"></script>
+<dialog id="navigation-dialog" class="navigation-dialog">
+  <div class="dialog-card navigation-choice-card">
+    <header class="dialog-header">
+      <div><span class="eyebrow">SMART NAVIGATION</span><h2>Elegir navegador</h2></div>
+      <button class="round-button" data-close="navigation-dialog" type="button">✕</button>
+    </header>
+    <p id="navigation-destination">Selecciona el navegador para continuar.</p>
+    <div class="navigation-provider-grid">
+      <button type="button" class="navigation-provider google" data-navigation-provider="google"><strong>🗺 Google Maps</strong><span>Compatible con CarPlay y Android Auto</span></button>
+      <button type="button" class="navigation-provider apple" data-navigation-provider="apple"><strong>🍎 Apple Maps</strong><span>Integración directa con Apple CarPlay</span></button>
+    </div>
+    <label class="remember-navigation"><input id="remember-navigation" type="checkbox" checked> Recordar mi elección</label>
+  </div>
+</dialog>
+<script type="module" src="./js/app.js?v=3.1.0"></script>
 </body>
 </html>

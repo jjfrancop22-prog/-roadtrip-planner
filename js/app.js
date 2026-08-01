@@ -8,6 +8,7 @@ import {findOfficialParking} from "./official-parking.js";
 import {initDevPanel, updateDevPanel} from "./dev-panel.js";
 import {formatDistance as routeDistance,formatDuration as routeDuration} from "./route-engine.js";
 import {recalculateDaySchedule} from "./schedule-engine.js";
+import {getNavigationPreference,saveNavigationPreference,openNavigation,providerLabel} from "./navigation-engine.js";
 
 let state=load()||structuredClone(seed);
 
@@ -31,6 +32,7 @@ if(state?.itineraryMigrations?.lvSacramento!==OFFICIAL_LV_SAC_VERSION){
 let activeTrip=state.trips.find(t=>t.id===state.selectedTripId)||state.trips[0];
 let userLocation=null,userAccuracy=null,userMarker=null,accuracyCircle=null,routeLine=null,watchId=null;
 let currentWeather=null,currentLegRoute=null,lastArrivalStopId=null;
+let pendingNavigationStop=null;
 const photoCache={};
 const map=L.map("map",{zoomControl:false}).setView([36.12,-115.17],12);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
@@ -996,7 +998,7 @@ async function renderSheet(stop=nextStop()){
     </div>
   </div>
   ${renderParkingCard(stop)}
-  <div class=sheet-actions><button class="action secondary" data-complete="${stop.dayId}|${stop.id}">✓ Completar</button><a class="action primary" target=_blank href="${mapsUrl(stop.address)}">🧭 Navegar</a></div>
+  <div class=sheet-actions><button class="action secondary" data-complete="${stop.dayId}|${stop.id}">✓ Completar</button><button class="action primary" type="button" data-navigate="${stop.dayId}|${stop.id}">🧭 Navegar</button></div>
   </div>`;
   document.querySelector("#progress-pill").textContent=state.navigation.trackingEnabled?`GPS activo · ${pct}% completado`:`Activa “Estoy aquí” · ${pct}% completado`;
   bind();
@@ -1014,7 +1016,41 @@ function openParkingDialogForStop(dayId,stopId){
   document.querySelector("#stop-tip").value=`Estacionamiento vinculado a ${destination?.name||"esta parada"}.`;
 }
 
+
+function closeNavigationDialog(){
+  const dialog=document.querySelector("#navigation-dialog");
+  if(dialog?.open)dialog.close();
+  pendingNavigationStop=null;
+}
+function launchNavigation(stop,provider,remember=true){
+  if(!stop)return;
+  if(remember)saveNavigationPreference(provider);
+  const target=realStop(stop.dayId,stop.id);
+  if(target&&target.status==="pending"){
+    target.status="enroute";
+    save(state);
+  }
+  closeNavigationDialog();
+  try{openNavigation(stop,provider,{avoidTolls:Boolean(state.navigation?.avoidTolls),avoidHighways:Boolean(state.navigation?.avoidHighways)})}
+  catch(error){alert(error.message)}
+}
+function requestNavigation(stop){
+  if(!stop)return;
+  const preferred=getNavigationPreference();
+  if(preferred){launchNavigation(stop,preferred,false);return}
+  pendingNavigationStop=stop;
+  const dialog=document.querySelector("#navigation-dialog");
+  document.querySelector("#navigation-destination").textContent=`Destino: ${stop.name}`;
+  dialog.showModal();
+}
+function bindNavigationControls(){
+  document.querySelectorAll("[data-navigate]").forEach(button=>button.onclick=()=>{
+    const [dayId,stopId]=button.dataset.navigate.split("|");
+    requestNavigation({...realStop(dayId,stopId),dayId});
+  });
+}
 function bind(){
+  bindNavigationControls();
   document.querySelectorAll("[data-track]").forEach(b=>b.onclick=toggleTracking);
   document.querySelectorAll("[data-complete]").forEach(b=>b.onclick=async()=>{
     const [d,s]=b.dataset.complete.split("|"),x=realStop(d,s);x.completed=true;x.status="completed";normalizeStatuses();save(state);await drawMap();await renderSheet();timeline();
@@ -1144,7 +1180,7 @@ function timeline(){
               <button title="Duplicar" data-duplicate-stop="${day.id}|${stop.id}">⧉</button>
               <button class=timeline-edit title="Editar o mover a otro día" data-timeline-edit="${day.id}|${stop.id}">✏️</button>
               <button class=timeline-delete title="Eliminar" data-timeline-delete="${day.id}|${stop.id}">🗑</button>
-              <a class=timeline-nav target=_blank rel=noopener href="${mapsUrl(stop.address)}">Ir</a>
+              <button class=timeline-nav type=button data-navigate="${day.id}|${stop.id}">🧭 Navegar</button>
             </div>
           </article>`).join(""):`<div class=timeline-empty>
             <strong>Este día todavía no tiene paradas.</strong>
@@ -1228,13 +1264,19 @@ function toggleTracking(){state.navigation.trackingEnabled?stop():start()}
 function drive(){
   const s=nextStop();if(!s)return;
   const x=realStop(s.dayId,s.id),direct=haversineMeters(userLocation,{lat:s.lat,lng:s.lng});
-  document.querySelector("#driving-content").innerHTML=`<div class=drive-card><div class=drive-icon>${s.icon}</div><div class="nav-status ${x.status}">${label(x.status)}</div><h2>${s.name}</h2><p>${s.address}</p><div class=drive-metrics><div class=drive-metric><strong>${fDist(currentLegRoute?.meters??direct)}</strong><span>Distancia</span></div><div class=drive-metric><strong>${fTime(currentLegRoute?.seconds)}</strong><span>Tiempo</span></div></div><div class=drive-actions><a target=_blank href="${mapsUrl(s.address)}">🧭 Llévame a la siguiente</a><button id=drive-complete>✓ Confirmar parada</button></div></div>`;
+  document.querySelector("#driving-content").innerHTML=`<div class=drive-card><div class=drive-icon>${s.icon}</div><div class="nav-status ${x.status}">${label(x.status)}</div><h2>${s.name}</h2><p>${s.address}</p><div class=drive-metrics><div class=drive-metric><strong>${fDist(currentLegRoute?.meters??direct)}</strong><span>Distancia</span></div><div class=drive-metric><strong>${fTime(currentLegRoute?.seconds)}</strong><span>Tiempo</span></div></div><div class=drive-actions><button type=button data-navigate="${s.dayId}|${s.id}">🧭 Llévame a la siguiente</button><button id=drive-complete>✓ Confirmar parada</button></div></div>`;
   document.querySelector("#drive-complete").onclick=async()=>{x.completed=true;x.status="completed";normalizeStatuses();save(state);await drawMap();await renderSheet();timeline();drive()}
 }
 document.querySelector("#sheet-handle").onclick=()=>{const s=document.querySelector("#bottom-sheet");s.classList.toggle("expanded");s.classList.toggle("compact")};
 document.querySelector("#timeline-button").onclick=()=>{timeline();document.querySelector("#timeline-dialog").showModal()};
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>document.querySelector("#"+b.dataset.close).close());
 document.querySelector("#location-button").onclick=toggleTracking;
+document.querySelectorAll("[data-navigation-provider]").forEach(button=>button.onclick=()=>{
+  if(!pendingNavigationStop)return;
+  launchNavigation(pendingNavigationStop,button.dataset.navigationProvider,document.querySelector("#remember-navigation").checked);
+});
+document.querySelectorAll('[data-close="navigation-dialog"]').forEach(button=>button.onclick=closeNavigationDialog);
+
 document.querySelector("#continue-button").onclick=()=>{document.querySelector("#driving-mode").classList.remove("hidden");if(!state.navigation.trackingEnabled)start();drive()};
 document.querySelector("#close-driving").onclick=()=>document.querySelector("#driving-mode").classList.add("hidden");
 

@@ -481,3 +481,15 @@ dialog::backdrop{background:rgba(15,23,42,.55);backdrop-filter:blur(6px)}.dialog
 
 /* V2.3.2-A · Smart Route Engine */
 .timeline-route-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}.timeline-route-controls label{display:flex;align-items:center;gap:6px;background:#eaf3ff;color:#0878e8;border-radius:999px;padding:6px 10px;font-weight:800}.timeline-route-controls input{border:0;background:transparent;color:inherit;font:inherit;width:92px}.smart-route-meta{display:flex!important;flex-wrap:wrap;gap:7px!important;margin-top:8px}.route-chip{display:inline-flex;align-items:center;gap:4px;background:#f1f4f8;border-radius:999px;padding:6px 10px;color:#576171;font-size:.86rem;white-space:nowrap}.route-chip strong{color:#111827}.timeline-status{align-self:center}@media(max-width:680px){.smart-route-meta{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))}.route-chip{justify-content:center;font-size:.78rem;padding:6px 7px}.timeline-route-controls{align-items:flex-start}.timeline-day-head{align-items:flex-start}}
+
+/* V3.1.0 Smart Navigation */
+.navigation-dialog{border:0;background:transparent;padding:0;max-width:min(92vw,560px);width:100%}
+.navigation-dialog::backdrop{background:rgba(15,23,42,.58);backdrop-filter:blur(6px)}
+.navigation-choice-card{width:auto;margin:0}
+.navigation-provider-grid{display:grid;gap:12px;margin:18px 0}
+.navigation-provider{border:1px solid #dbe3ee;border-radius:18px;background:#fff;padding:18px;text-align:left;display:flex;flex-direction:column;gap:5px;cursor:pointer;box-shadow:0 8px 24px rgba(15,23,42,.08)}
+.navigation-provider strong{font-size:1.08rem}.navigation-provider span{color:#64748b;font-size:.9rem}
+.navigation-provider:hover,.navigation-provider:focus-visible{border-color:#2563eb;transform:translateY(-1px)}
+.remember-navigation{display:flex!important;align-items:center;gap:10px;font-weight:700}.remember-navigation input{width:20px;height:20px}
+button.action.primary[data-navigate],button.timeline-nav[data-navigate]{border:0;cursor:pointer;font:inherit}
+.navigation-preference-note{font-size:.82rem;color:#64748b;text-align:center;margin-top:8px}

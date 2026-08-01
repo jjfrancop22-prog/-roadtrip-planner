@@ -1,9 +1,10 @@
-const C="roadtrip-ai-v2.5.0-b";
+const C="roadtrip-ai-v3-1-0-smart-navigation";
 const A=[
   "./","./index.html","./manifest.json","./css/app.css?v=2.5.0-b","./js/app.js?v=2.5.0-b",
   "./js/storage.js","./js/maps.js","./js/maps-engine.js","./js/seed.js","./js/dev-panel.js",
   "./js/official-parking.js","./js/smart-search.js","./js/ui.js","./js/cache.js","./js/api.js",
-  "./js/route-engine.js","./js/schedule-engine.js","./js/travel-score.js","./js/planner-engine.js",
+  "./js/route-engine.js","./js/schedule-engine.js",
+  "./js/navigation-engine.js","./js/travel-score.js","./js/planner-engine.js",
   "./js/walking-engine.js","./js/places-engine.js","./js/weather-engine.js","./js/traffic-engine.js",
   "./js/fuel-engine.js","./js/budget-engine.js","./js/hotel-engine.js","./js/restaurant-engine.js",
   "./assets/icons/icon-192.png","./assets/icons/icon-512.png","./assets/icons/icon-maskable-512.png"

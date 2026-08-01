@@ -1,0 +1,8 @@
+ROADTRIP AI V3.1.0 — SMART NAVIGATION
+
+- Botón Navegar integrado en tarjetas, línea de tiempo y modo conducción.
+- Selección entre Google Maps y Apple Maps.
+- Preferencia guardada localmente.
+- Navegación automática a la siguiente parada pendiente.
+- Estado de la parada cambia a En ruta al iniciar navegación.
+- Deep links compatibles con la navegación mostrada en CarPlay/Android Auto mediante Maps.
