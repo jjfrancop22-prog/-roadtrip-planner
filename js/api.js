@@ -1,3 +1,4 @@
+import {providerManager} from "./search/provider-manager.js";
 const NOMINATIM_URL="https://nominatim.openstreetmap.org/search";
 let lastRequestAt=0;
 const MIN_REQUEST_INTERVAL=1100;
@@ -34,38 +35,8 @@ function normalizePlace(item){
   };
 }
 
-export async function searchNominatim(query,{limit=8,language="es,en"}={}){
-  const clean=query.trim();
-  if(clean.length<3) return [];
-
-  const elapsed=Date.now()-lastRequestAt;
-  if(elapsed<MIN_REQUEST_INTERVAL) await wait(MIN_REQUEST_INTERVAL-elapsed);
-  lastRequestAt=Date.now();
-
-  const params=new URLSearchParams({
-    q:clean,
-    format:"jsonv2",
-    addressdetails:"1",
-    namedetails:"1",
-    extratags:"1",
-    limit:String(Math.min(limit,10)),
-    dedupe:"1",
-    "accept-language":language
-  });
-
-  const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),12000);
-  try{
-    const response=await fetch(`${NOMINATIM_URL}?${params}`,{
-      headers:{"Accept":"application/json"},
-      signal:controller.signal
-    });
-    if(!response.ok) throw new Error(`OpenStreetMap respondió ${response.status}`);
-    const data=await response.json();
-    return Array.isArray(data)?data.map(normalizePlace):[];
-  }finally{
-    clearTimeout(timeout);
-  }
+export async function searchNominatim(query,options={}){
+  return providerManager.search(query,options);
 }
 
 

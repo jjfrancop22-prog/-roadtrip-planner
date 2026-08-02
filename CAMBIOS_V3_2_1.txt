@@ -1,0 +1,11 @@
+RoadTrip AI V3.2.1 — Smart Ranking Engine
+
+- GPS puntual en tiempo real para el buscador.
+- Contexto de respaldo basado en el día/ruta seleccionada.
+- Búsqueda simultánea global, cercana y sobre la ruta.
+- Distancia real aproximada a cada resultado.
+- Distancia al corredor de la ruta por segmentos.
+- Penalización de resultados lejanos al viaje.
+- Smart Score y razón visible del ordenamiento.
+- Tarjetas con distancia, tiempo estimado, estado y fuente.
+- Conserva Provider Manager, conectores premium y caché offline.

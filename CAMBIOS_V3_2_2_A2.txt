@@ -1,0 +1,7 @@
+RoadTrip AI V3.2.2-A3 — GeoSearch Engine Estabilizado
+
+- Corrige el error: undefined is not an object (evaluating currentResults.length).
+- Normaliza todas las respuestas de caché, GeoSearch y proveedores a arreglos seguros.
+- Evita que una respuesta incompleta bloquee el buscador.
+- Mantiene GPS, ciudad actual, búsqueda por radio y respaldo offline.
+- Actualiza la caché PWA para forzar la carga de los módulos corregidos.

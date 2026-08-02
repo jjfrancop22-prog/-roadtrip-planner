@@ -1,0 +1,12 @@
+RoadTrip AI V3.2.0-D — Caché inteligente para uso sin conexión
+
+- Nueva caché persistente con IndexedDB para búsquedas y lugares.
+- Guarda automáticamente resultados consultados durante 14 días y permite respaldo offline hasta 180 días.
+- Índice local de lugares para encontrar coincidencias aunque no exista la consulta exacta.
+- Precarga automática de todas las paradas de la ruta activa.
+- Modo offline visible en el buscador.
+- Respaldo automático cuando los proveedores en línea fallan.
+- Service Worker dividido en caché de aplicación, recursos dinámicos y mapas/imágenes.
+- Estrategia Network First para aplicación y APIs; Stale While Revalidate para mapas e imágenes.
+- Limpieza automática para evitar crecimiento ilimitado de la caché.
+- Conserva Provider Manager, Smart Ranking, deduplicación y conectores premium.

@@ -1,0 +1,8 @@
+RoadTrip AI V3.2.2-A4 — Smart Navigation Fix
+
+- Evento delegado permanente para todos los botones Navegar dinámicos.
+- Corrección del botón Navegar en la línea de tiempo: ancho automático, texto interno y área táctil estable.
+- Validación de día, parada, coordenadas, dirección y nombre antes de navegar.
+- Apertura compatible mediante window.location.assign().
+- Respaldo por dirección o nombre cuando faltan coordenadas.
+- Actualización de versiones de app.js, CSS y Service Worker para evitar caché antigua.

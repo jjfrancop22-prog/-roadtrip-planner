@@ -32,7 +32,9 @@ export function buildNavigationUrl(stop,provider="google",options={}){
 export function openNavigation(stop,provider,options={}){
   const url=buildNavigationUrl(stop,provider,options);
   if(!url)throw new Error("La parada no tiene una dirección o coordenadas válidas.");
-  window.location.href=url;
+  // location.assign mantiene el gesto directo del usuario y es compatible
+  // con Safari/iPhone, PWA y navegadores de escritorio.
+  window.location.assign(url);
   return url;
 }
 export function providerLabel(provider){return provider==="apple"?"Apple Maps":"Google Maps"}

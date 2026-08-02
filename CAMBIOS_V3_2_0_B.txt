@@ -1,0 +1,9 @@
+ROADTRIP AI V3.2.0-B — ROADTRIP PROVIDER + SMART RANKING
+
+- Nuevo roadtrip-provider.js para buscar primero en lugares conocidos del itinerario y datos locales.
+- Provider Manager consulta RoadTrip AI Places y OpenStreetMap.
+- Smart Ranking combina coincidencia de nombre, cercanía, proximidad a la ruta, proveedor y popularidad.
+- Eliminación automática de resultados duplicados por nombre y proximidad geográfica.
+- Fusión de fuentes y fotografías cuando dos proveedores describen el mismo lugar.
+- Tarjetas de resultado con distancia, tiempo estimado, indicador En tu ruta y Smart Score.
+- OpenStreetMap continúa siendo el proveedor principal y respaldo online.

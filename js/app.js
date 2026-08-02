@@ -1043,11 +1043,34 @@ function requestNavigation(stop){
   document.querySelector("#navigation-destination").textContent=`Destino: ${stop.name}`;
   dialog.showModal();
 }
+let navigationDelegationBound=false;
+function handleNavigateElement(button){
+  const payload=String(button?.dataset?.navigate||"");
+  const [dayId,stopId]=payload.split("|");
+  if(!dayId||!stopId){
+    alert("No se pudo identificar esta parada para navegar.");
+    return;
+  }
+  const stop=realStop(dayId,stopId);
+  if(!stop){
+    alert("La parada ya no existe o no está disponible.");
+    return;
+  }
+  requestNavigation({...stop,dayId});
+}
 function bindNavigationControls(){
-  document.querySelectorAll("[data-navigate]").forEach(button=>button.onclick=()=>{
-    const [dayId,stopId]=button.dataset.navigate.split("|");
-    requestNavigation({...realStop(dayId,stopId),dayId});
-  });
+  // Delegación permanente: funciona también con botones creados después
+  // de abrir la línea de tiempo, cambiar el itinerario o activar modo conducción.
+  if(!navigationDelegationBound){
+    document.addEventListener("click",event=>{
+      const button=event.target.closest?.("[data-navigate]");
+      if(!button)return;
+      event.preventDefault();
+      event.stopPropagation();
+      handleNavigateElement(button);
+    });
+    navigationDelegationBound=true;
+  }
 }
 function bind(){
   bindNavigationControls();
@@ -1314,10 +1337,21 @@ initSmartSearch({
     updateDevPanel({selectedPlace:place.name});
     await addSmartPlaceToTrip(place);
   },
-  onMetrics:metrics=>updateDevPanel(metrics)
+  onMetrics:metrics=>updateDevPanel(metrics),
+  getContext:()=>{
+    const selectedDayId=document.querySelector("#stop-day-select")?.value;
+    const selectedDay=activeTrip.days.find(day=>day.id===selectedDayId)||activeTrip.days[0];
+    const dayStops=(selectedDay?.stops||[]).filter(stop=>Number.isFinite(Number(stop.lat))&&Number.isFinite(Number(stop.lng)));
+    return {
+      location:userLocation?{lat:userLocation.lat,lng:userLocation.lng}:null,
+      route:dayStops.map(stop=>({lat:Number(stop.lat),lng:Number(stop.lng)})),
+      stops:allStops(),
+      activeDayId:selectedDay?.id||null
+    };
+  }
 });
 initDevPanel({
-  version:"2.5.0-B",
+  version:"3.2.2-A1",
   getStats:()=>({
     stops:allStops().length,
     days:activeTrip.days.length,
@@ -1326,7 +1360,7 @@ initDevPanel({
 });
 
 document.querySelector("#trip-title").textContent=activeTrip.name;
-document.querySelector("#trip-title").title="V2.5.0-B · Itinerario LV → Sacramento automático";
+document.querySelector("#trip-title").title="V3.2.2-A1 · GeoSearch Engine corregido";
 await recalculateAllDays();
 await drawMap();await renderSheet();timeline();
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js"));

@@ -1,0 +1,7 @@
+RoadTrip AI V3.2.2-A3 — GeoSearch caché vacía corregida
+
+- Corrige el caso donde una búsqueda vacía quedaba guardada y bloqueaba nuevas consultas online.
+- Las entradas con cero resultados se ignoran automáticamente.
+- Las búsquedas sin resultados ya no se guardan en IndexedDB.
+- Se usa una base IndexedDB nueva para descartar la caché defectuosa anterior.
+- Conserva GeoSearch, GPS, ciudad, radios progresivos, Smart Ranking y modo offline.

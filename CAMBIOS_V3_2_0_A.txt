@@ -1,0 +1,11 @@
+ROADTRIP AI V3.2.0-A — UNIVERSAL SEARCH CONNECTOR
+
+Base oficial del motor de búsqueda:
+- Se creó js/search/search-provider.js con el contrato común.
+- Se creó js/search/provider-manager.js como único punto de entrada.
+- Se creó js/search/providers/osm-provider.js.
+- OpenStreetMap permanece como proveedor principal.
+- Se normalizó el formato de resultados para futuros conectores.
+- smart-search.js ya no consulta OpenStreetMap directamente.
+- api.js conserva compatibilidad con funciones existentes.
+- La interfaz y el comportamiento visual permanecen intactos.

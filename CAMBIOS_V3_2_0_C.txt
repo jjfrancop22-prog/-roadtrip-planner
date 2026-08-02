@@ -1,0 +1,21 @@
+ROADTRIP AI V3.2.0-C — PREMIUM PROVIDER CONNECTORS
+
+NUEVO
+- google-provider.js
+- apple-provider.js
+- provider-config.js
+- Registro de Google Places y Apple Maps en provider-manager.js
+- Fusión automática mediante el motor existente executeAll + deduplicate + rank
+- Estado de configuración visible mediante providerManager.getStatus()
+
+SEGURIDAD Y CONFIGURACIÓN
+- Los conectores premium están desactivados por defecto.
+- No se incluyen claves privadas ni tokens dentro del proyecto.
+- Google Places admite proxy propio (recomendado) o modo directo para pruebas.
+- Apple Maps admite MapKit JS inicializado o proxy propio.
+- OpenStreetMap y RoadTrip AI Places continúan funcionando sin configuración adicional.
+
+COMPATIBILIDAD
+- Se conserva el formato único de resultados.
+- Se conserva Smart Ranking y eliminación de duplicados.
+- Si Google o Apple no están configurados, no interfieren con el buscador.

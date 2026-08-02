@@ -493,3 +493,31 @@ dialog::backdrop{background:rgba(15,23,42,.55);backdrop-filter:blur(6px)}.dialog
 .remember-navigation{display:flex!important;align-items:center;gap:10px;font-weight:700}.remember-navigation input{width:20px;height:20px}
 button.action.primary[data-navigate],button.timeline-nav[data-navigate]{border:0;cursor:pointer;font:inherit}
 .navigation-preference-note{font-size:.82rem;color:#64748b;text-align:center;margin-top:8px}
+
+/* V3.2.0-B · Smart Ranking */
+.smart-place-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.smart-place-meta b{font-size:.72rem;font-weight:700;padding:4px 7px;border-radius:999px;background:rgba(74,144,226,.13);border:1px solid rgba(110,175,255,.22);color:#cfe5ff}
+
+
+/* V3.2.2-A4 · Smart Navigation Fix */
+.timeline-manager-actions .timeline-nav{
+  width:auto!important;
+  min-width:108px;
+  height:38px;
+  padding:0 12px!important;
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  white-space:nowrap;
+  overflow:visible;
+  position:relative;
+  z-index:2;
+  pointer-events:auto!important;
+  touch-action:manipulation;
+}
+button[data-navigate]{pointer-events:auto!important;touch-action:manipulation}
+@media(max-width:720px){
+  .timeline-manager-actions{flex-wrap:wrap}
+  .timeline-manager-actions .timeline-nav{min-width:112px}
+}

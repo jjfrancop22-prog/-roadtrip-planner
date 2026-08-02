@@ -34,3 +34,10 @@ Se excluyen:
 ## Importante
 La caminata se estima por distancia geográfica y no sustituye una ruta peatonal real.
 Las tarifas pueden cambiar y deben confirmarse antes de estacionar.
+
+
+## V3.2.1
+Caché inteligente de búsquedas, lugares de ruta y recursos ya consultados para uso con conexión limitada o sin conexión.
+
+## V3.2.2-A
+GeoSearch Engine activo: GPS previo, detección de ciudad, búsqueda progresiva por radio y respaldo nacional.

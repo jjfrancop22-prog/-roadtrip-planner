@@ -1,0 +1,11 @@
+RoadTrip AI V3.2.2-A — GeoSearch Engine
+
+- Nuevo js/search/geosearch-engine.js.
+- Obtiene GPS antes de buscar y reutiliza una lectura reciente.
+- Si GPS no está disponible, usa el inicio de la ruta activa.
+- Detecta ciudad/estado mediante geocodificación inversa de OpenStreetMap.
+- Busca progresivamente en radios de 10, 25, 50 y 100 km.
+- Enriquece la consulta con ciudad y estado para cadenas comerciales.
+- Solo realiza búsqueda nacional como respaldo.
+- Conserva Provider Manager, Smart Ranking, deduplicación y caché offline.
+- La interfaz informa ciudad y radio usado.

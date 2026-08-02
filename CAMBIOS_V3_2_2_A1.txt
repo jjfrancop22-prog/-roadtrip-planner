@@ -1,0 +1,8 @@
+RoadTrip AI V3.2.2-A1 — GeoSearch Engine corregido
+
+- La aplicación ya no depende de una importación estática de GeoSearch para arrancar.
+- Si GeoSearch falla o un archivo queda en caché, la aplicación abre y usa Provider Manager como respaldo.
+- Service Worker tolerante a archivos individuales y limpieza de cachés anteriores.
+- Corrección de cache-busting y coincidencia de recursos con query string.
+- Protección de navigator/geolocalización.
+- Conserva GPS, ciudad, radios 10/25/50/100 km, Smart Ranking y modo offline.
